@@ -1,0 +1,132 @@
+/* ── Footer.css ── */
+
+.footer {
+  background: #0F172A;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 48px 0 32px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 36px;
+}
+
+/* 브랜드 */
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.footer-logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.footer-logo-text {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+}
+.footer-logo-text span { color: var(--primary); }
+
+.footer-desc {
+  font-size: 13px;
+  line-height: 1.75;
+  max-width: 260px;
+  margin-bottom: 16px;
+}
+
+/* 소셜 아이콘 (cursor:pointer 유지) */
+.footer-social { display: flex; gap: 10px; }
+.social-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background var(--ease), transform var(--ease);
+}
+.social-btn:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* 컬럼 */
+.footer-col-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+.footer-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+}
+.footer-col ul li { font-size: 13px; }
+
+/* cursor:pointer 없는 링크 (소셜 제외 전부) */
+.footer-col ul li a {
+  color: rgba(255, 255, 255, 0.55);
+  transition: color var(--ease);
+  cursor: default;
+  pointer-events: none;
+}
+.footer-privacy {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* 하단 법적 정보 */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+.footer-legal {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.footer-bottom-links {
+  display: flex;
+  gap: 18px;
+}
+.footer-bottom-links a {
+  cursor: default;
+  pointer-events: none;
+  transition: color var(--ease);
+}
+.footer-bottom-links .privacy-link {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+}
+.footer-copyright {
+  text-align: center;
+  font-size: 12px;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+}
+@media (max-width: 768px) {
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+}
