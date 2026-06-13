@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import "../styles/Header.css";
+import { useNavigate } from "react-router-dom";
+import styles from "./Header.module.css";
 
 const NAV_LINKS = [
-  { label: "피드",       href: "feed" },
-  { label: "날짜별 조회", href: "calendar" },
-  { label: "통계",       href: "stats" },
+  { label: "피드", href: "/mealplan" },
+  { label: "날짜별 조회", href: "/mealplan/calendar" },
+  { label: "통계", href: "/mealplan/stats" },
 ];
 
-export default function Header({ isLoggedIn, user, onLogout, onNavigate, currentPage }) {
+export default function Header({ isLoggedIn, user, onLogout }) {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -19,32 +21,41 @@ export default function Header({ isLoggedIn, user, onLogout, onNavigate, current
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [menuOpen]);
 
-  const goTo = (page) => { setMenuOpen(false); onNavigate(page); };
+  const goTo = (path) => {
+    setMenuOpen(false);
+    navigate(path);
+  };
 
   return (
     <>
-      <nav className={`navbar${scrolled ? " scrolled" : ""}`}>
-        <div className="nav-inner">
-
-          <button className="nav-logo" onClick={() => goTo("feed")}>
-            <div className="nav-logo-icon">🥗</div>
-            <div className="nav-logo-text">
-              <span className="meal">Meal</span>
-              <span className="plan">Plan</span>
+      <nav
+        className={`${styles.navbar} ${scrolled ? styles.navbar_scrolled : ""}`}
+      >
+        <div className={styles.nav_inner}>
+          <button className={styles.nav_logo} onClick={() => goTo("/mealplan")}>
+            <div className={styles.nav_logo_icon}>🥗</div>
+            <div className={styles.nav_logo_text}>
+              <span className={styles.meal}>Meal</span>
+              <span className={styles.plan}>Plan</span>
             </div>
           </button>
 
           {isLoggedIn && (
-            <div className="nav-center">
+            <div className={styles.nav_center}>
               {NAV_LINKS.map(({ label, href }) => (
                 <a
                   key={href}
-                  href={`#${href}`}
-                  className={currentPage === href ? "active" : ""}
-                  onClick={e => { e.preventDefault(); goTo(href); }}
+                  href={href}
+                  className={`${styles.nav_center_link} ${location.pathname === href ? styles.nav_center_link_active : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    goTo(href);
+                  }}
                 >
                   {label}
                 </a>
@@ -52,61 +63,120 @@ export default function Header({ isLoggedIn, user, onLogout, onNavigate, current
             </div>
           )}
 
-          <div className="nav-auth">
+          <div className={styles.nav_auth}>
             {isLoggedIn ? (
               <>
-                <button className="btn btn-ghost btn-sm" onClick={() => goTo("write")}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => goTo("/mealplan/write")}
+                >
                   ✏️ 기록하기
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => goTo("mypage")}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => goTo("/mealplan/mypage")}
+                >
                   👤 {user?.nickname ?? "내 정보"}
                 </button>
               </>
             ) : (
               <>
-                <button className="btn btn-ghost btn-sm" onClick={() => goTo("login")}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => goTo("/users/login")}
+                >
                   로그인
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => goTo("register")}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => goTo("/users/join")}
+                >
                   회원가입
                 </button>
               </>
             )}
             <button
-              className={`hamburger${menuOpen ? " open" : ""}`}
-              onClick={() => setMenuOpen(v => !v)}
+              className={`${styles.hamburger} ${menuOpen ? styles.hamburger_open : ""}`}
+              onClick={() => setMenuOpen((v) => !v)}
               aria-label="메뉴"
             >
-              <span /><span /><span />
+              <span className={styles.hamburger_line} />
+              <span className={styles.hamburger_line} />
+              <span className={styles.hamburger_line} />
             </button>
           </div>
         </div>
       </nav>
 
-      <div className={`mobile-menu${menuOpen ? " open" : ""}`}>
+      <div
+        className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_open : ""}`}
+      >
         {isLoggedIn ? (
           <>
             {NAV_LINKS.map(({ label, href }) => (
-              <a key={href} href={`#${href}`} onClick={e => { e.preventDefault(); goTo(href); }}>
+              <a
+                key={href}
+                href={href}
+                className={styles.mobile_menu_link}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo(href);
+                }}
+              >
                 {label}
               </a>
             ))}
-            <div className="mobile-menu-divider" />
-            <div className="mobile-auth">
-              <button className="btn btn-ghost" onClick={() => goTo("write")}>✏️ 기록하기</button>
-              <button className="btn btn-primary" onClick={() => goTo("mypage")}>👤 마이페이지</button>
-              <button className="mobile-logout-btn" onClick={() => { setMenuOpen(false); onLogout(); }}>
+            <div className={styles.mobile_menu_divider} />
+            <div className={styles.mobile_auth}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => goTo("/mealplan/write")}
+              >
+                ✏️ 기록하기
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => goTo("/mealplan/mypage")}
+              >
+                👤 마이페이지
+              </button>
+              <button
+                className={styles.mobile_logout_btn}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLogout();
+                }}
+              >
                 로그아웃
               </button>
             </div>
           </>
         ) : (
           <>
-            <a href="#feed" onClick={e => { e.preventDefault(); goTo("feed"); }}>🍽️ 피드 둘러보기</a>
-            <div className="mobile-menu-divider" />
-            <div className="mobile-auth">
-              <button className="btn btn-ghost" onClick={() => goTo("login")}>로그인</button>
-              <button className="btn btn-primary" onClick={() => goTo("register")}>회원가입</button>
+            <a
+              href="/mealplan"
+              className={styles.mobile_menu_link}
+              onClick={(e) => {
+                e.preventDefault();
+                goTo("/mealplan");
+              }}
+            >
+              🍽️ 피드 둘러보기
+            </a>
+            <div className={styles.mobile_menu_divider} />
+            <div className={styles.mobile_auth}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => goTo("/users/login")}
+              >
+                로그인
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => goTo("/users/join")}
+              >
+                회원가입
+              </button>
             </div>
           </>
         )}

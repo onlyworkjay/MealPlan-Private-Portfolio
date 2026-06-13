@@ -1,25 +1,25 @@
-import "../styles/Footer.css";
+import styles from "./Footer.module.css";
 
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="footer">
+    <footer className={styles.footer}>
       <div className="wrap">
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <div className="footer-logo">
-              <div className="footer-logo-icon">🥗</div>
-              <span className="footer-logo-text">
+        <div className={styles.footerGrid}>
+          <div className={styles.footerBrand}>
+            <div className={styles.footerLogo}>
+              <div className={styles.footerLogoIcon}>🥗</div>
+              <span className={styles.footerLogoText}>
                 Meal<span>Plan</span>
               </span>
             </div>
-            <p className="footer-desc">
+            <p className={styles.footerDesc}>
               운동·식단 관리자를 위한 SNS형 식단 기록 서비스. 먹은 것을 사진으로
               남기고, 체중 변화를 직접 확인하세요.
             </p>
-            <div className="footer-social">
+            <div className={styles.footerSocial}>
               <a
-                className="social-btn"
+                className={styles.socialBtn}
                 href="https://blog.naver.com"
                 target="_blank"
                 rel="noreferrer"
@@ -33,7 +33,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="social-btn"
+                className={styles.socialBtn}
                 href="https://youtube.com"
                 target="_blank"
                 rel="noreferrer"
@@ -44,7 +44,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="social-btn"
+                className={styles.socialBtn}
                 href="https://github.com"
                 target="_blank"
                 rel="noreferrer"
@@ -57,77 +57,83 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="footer-col">
-            <div className="footer-col-title">서비스</div>
-            <ul>
-              <li>
-                <a>피드 둘러보기</a>
+          <div className={styles.footerCol}>
+            <div className={styles.footerColTitle}>서비스</div>
+            <ul className={styles.footerColList}>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>피드 둘러보기</a>
               </li>
-              <li>
-                <a>식단 기록하기</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>식단 기록하기</a>
               </li>
-              <li>
-                <a>날짜별 조회</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>날짜별 조회</a>
               </li>
-              <li>
-                <a>체중 변화 통계</a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="footer-col">
-            <div className="footer-col-title">고객지원</div>
-            <ul>
-              <li>
-                <a>공지사항</a>
-              </li>
-              <li>
-                <a>자주 묻는 질문</a>
-              </li>
-              <li>
-                <a>문의하기</a>
-              </li>
-              <li>
-                <a>이용 가이드</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>체중 변화 통계</a>
               </li>
             </ul>
           </div>
 
-          <div className="footer-col">
-            <div className="footer-col-title">회사 정보</div>
-            <ul>
-              <li>
-                <a>서비스 소개</a>
+          <div className={styles.footerCol}>
+            <div className={styles.footerColTitle}>고객지원</div>
+            <ul className={styles.footerColList}>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>공지사항</a>
               </li>
-              <li>
-                <a>이용약관</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>자주 묻는 질문</a>
               </li>
-              <li>
-                <a className="footer-privacy">개인정보처리방침</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>문의하기</a>
               </li>
-              <li>
-                <a>채용 안내</a>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>이용 가이드</a>
+              </li>
+            </ul>
+          </div>
+
+          <div className={styles.footerCol}>
+            <div className={styles.footerColTitle}>회사 정보</div>
+            <ul className={styles.footerColList}>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>서비스 소개</a>
+              </li>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>이용약관</a>
+              </li>
+              <li className={styles.footerColItem}>
+                <a
+                  className={`${styles.footerColLink} ${styles.footerPrivacy}`}
+                >
+                  개인정보처리방침
+                </a>
+              </li>
+              <li className={styles.footerColItem}>
+                <a className={styles.footerColLink}>채용 안내</a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <p className="footer-legal">
+        <div className={styles.footerBottom}>
+          <p className={styles.footerLegal}>
             상호: (주)밀플랜 &nbsp;|&nbsp; 대표: 장지혁 &nbsp;|&nbsp;
             사업자등록번호: 123-45-67890
             <br />
             주소: 서울특별시 영등포구 우리집로 123, 1층 &nbsp;|&nbsp; 고객센터:
             02-1234-5678 &nbsp;|&nbsp; 이메일: support@mealplan.kr
           </p>
-          <div className="footer-bottom-links">
-            <a>이용약관</a>
-            <a className="privacy-link">개인정보처리방침</a>
-            <a>사업자정보확인</a>
+          <div className={styles.footerBottomLinks}>
+            <a className={styles.footerBottomLink}>이용약관</a>
+            <a className={`${styles.footerBottomLink} ${styles.privacyLink}`}>
+              개인정보처리방침
+            </a>
+            <a className={styles.footerBottomLink}>사업자정보확인</a>
           </div>
         </div>
 
-        <p className="footer-copyright">
+        <p className={styles.footerCopyright}>
           © {year} MealPlan. All rights reserved.
         </p>
       </div>
