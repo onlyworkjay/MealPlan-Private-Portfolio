@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 
-function LoginPage({ onNavigate, onLogin }) {
+function LoginPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ id: "", password: "" });
   const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin({ nickname: form.id || "사용자" });
-    onNavigate("feed");
+    navigate("/mealplan");
   };
 
   return (
-    <div className={styles["login-page"]}>
+    <div className={styles.login_page_wrap}>
       <div className={styles["login-card"]}>
         <div className={styles["login-logo"]}>
           <div className={styles["login-logo-icon"]}>🥗</div>
@@ -23,7 +23,6 @@ function LoginPage({ onNavigate, onLogin }) {
         <p className={styles["login-sub"]}>
           아이디와 비밀번호를 입력해 로그인하세요
         </p>
-
         <form onSubmit={handleSubmit}>
           <div className={styles["form-group"]}>
             <label className={styles["form-label"]}>아이디</label>
@@ -46,8 +45,6 @@ function LoginPage({ onNavigate, onLogin }) {
               }
             />
           </div>
-
-          {/* 로그인 버튼 */}
           <button
             type="submit"
             className={`btn btn-primary ${styles["login-submit"]}`}
@@ -61,22 +58,17 @@ function LoginPage({ onNavigate, onLogin }) {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              onNavigate("register");
+              navigate("/users/join");
             }}
           >
             회원가입
           </a>
         </p>
-
-        {/* 아이디 / 비밀번호 찾기 */}
-
         <div className={styles.find_account_area}>
           <Link to="/users/find-id" className={styles.find_account_link}>
             아이디 찾기
           </Link>
-
           <span className={styles.find_account_divider}>|</span>
-
           <Link to="/users/find-pw" className={styles.find_account_link}>
             비밀번호 찾기
           </Link>

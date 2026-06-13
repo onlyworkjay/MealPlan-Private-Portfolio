@@ -1,4 +1,4 @@
-.login-page {
+.login_page_wrap {
   min-height: calc(100vh - var(--nav-h));
   display: flex;
   align-items: center;
@@ -100,6 +100,7 @@
   text-decoration: underline;
 }
 
+/* 아이디, 비밀번호 찾기 사이에 "|" 표시 */
 .find_account_divider {
   color: var(--text-light);
   font-size: 13px;
