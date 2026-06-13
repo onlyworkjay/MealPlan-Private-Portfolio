@@ -6,10 +6,12 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Header />
       <Routes>
         <Route path="/mealplan" element={<MainPage />} />

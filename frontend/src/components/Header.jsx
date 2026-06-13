@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Header.module.css";
 
+import logo from "../assets/logo.svg";
+
 const NAV_LINKS = [
   { label: "피드", href: "/mealplan" },
   { label: "날짜별 조회", href: "/mealplan/calendar" },
@@ -38,7 +40,13 @@ export default function Header({ isLoggedIn, user, onLogout }) {
       >
         <div className={styles.nav_inner}>
           <button className={styles.nav_logo} onClick={() => goTo("/mealplan")}>
-            <div className={styles.nav_logo_icon}>🥗</div>
+            <img
+              src={logo}
+              alt="MealPlan 로고"
+              width="36"
+              height="36"
+              style={{ borderRadius: "10px" }}
+            />
             <div className={styles.nav_logo_text}>
               <span className={styles.meal}>Meal</span>
               <span className={styles.plan}>Plan</span>

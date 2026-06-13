@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./JoinPage.module.css";
 import Swal from "sweetalert2";
+import logo from "../assets/logo.svg";
 
 function JoinPage() {
   const navigate = useNavigate();
@@ -99,7 +100,9 @@ function JoinPage() {
     <div className={`${styles.join_page} ${styles.join_page_top}`}>
       <div className={`${styles.join_card} ${styles.join_card_wide}`}>
         <div className={styles.join_logo}>
-          <div className={styles.join_logo_icon}>🥗</div>
+          <div className={styles.join_logo_icon}>
+            <img src={logo} alt="MealPlan 로고" />
+          </div>
           <span className={styles.join_logo_name}>
             Meal<span>Plan</span>
           </span>

@@ -1,4 +1,5 @@
 import styles from "./Footer.module.css";
+import logo from "../assets/logo.svg";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -8,7 +9,9 @@ export default function Footer() {
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}>
             <div className={styles.footerLogo}>
-              <div className={styles.footerLogoIcon}>🥗</div>
+              <div className={styles.footerLogoIcon}>
+                <img src={logo} alt="MealPlan 로고" />
+              </div>
               <span className={styles.footerLogoText}>
                 Meal<span>Plan</span>
               </span>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
+import logo from "../assets/logo.svg";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +15,9 @@ function LoginPage() {
     <div className={styles.login_page_wrap}>
       <div className={styles["login-card"]}>
         <div className={styles["login-logo"]}>
-          <div className={styles["login-logo-icon"]}>🥗</div>
+          <div className={styles["login-logo-icon"]}>
+            <img src={logo} alt="MealPlan 로고" />
+          </div>
           <span className={styles["login-logo-name"]}>
             Meal<span>Plan</span>
           </span>

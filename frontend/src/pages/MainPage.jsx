@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./MainPage.module.css";
+import logo from "../assets/logo.svg";
 
 const MOCK_POSTS = [
   {
@@ -326,16 +327,18 @@ const MainPage = () => {
             </div>
             {!isLoggedIn && (
               <div className={`${styles.sidebarCard} ${styles.sidebarCta}`}>
-                <div className={styles.sidebarCtaIcon}>🥗</div>
+                <div className={styles.sidebarCtaIcon}>
+                  <img src={logo} alt="MealPlan 로고" />
+                </div>
                 <div className={styles.sidebarCtaTitle}>지금 시작하세요!</div>
                 <div className={styles.sidebarCtaDesc}>
                   회원가입 후 나만의 식단을 기록해보세요
                 </div>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => navigate("/mealplan/join")}
+                  onClick={() => navigate("/users/join")}
                 >
-                  무료 가입하기
+                  회원 가입하기
                 </button>
               </div>
             )}
