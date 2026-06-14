@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
+import FindIdPage from "./pages/FindIdPage";
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         {/* ⬆️ 로그인 페이지 */}
         <Route path="/users/join" element={<JoinPage />} />
         {/* ⬆️ 회원가입 */}
+        <Route path="/users/find-id" element={<FindIdPage />} />
       </Routes>
       <Footer />
     </>

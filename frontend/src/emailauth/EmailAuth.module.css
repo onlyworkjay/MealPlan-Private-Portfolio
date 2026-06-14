@@ -1,0 +1,128 @@
+.email_input_wrap {
+  width: 100%;
+}
+
+.email_input_wrap label,
+.input_wrap label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.input_wrap {
+  margin-top: 24px;
+}
+
+.input_item {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.email_input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 56px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(231, 181, 106, 0.18);
+  background: rgba(12, 9, 7, 0.5);
+  color: var(--ivory);
+  padding: 0 18px;
+  font-size: 16px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.email_input::placeholder {
+  color: rgba(255, 248, 236, 0.38);
+}
+
+.email_input:focus {
+  border-color: var(--bun);
+  background: rgba(12, 9, 7, 0.72);
+  box-shadow: 0 0 0 4px rgba(231, 181, 106, 0.13);
+}
+
+.email_input:read-only {
+  background: rgba(255, 248, 236, 0.08);
+  color: rgba(255, 248, 236, 0.5);
+  border-color: rgba(255, 248, 236, 0.1);
+  cursor: not-allowed;
+}
+
+.email_btn {
+  min-width: 136px;
+  height: 56px;
+  border: 1px solid rgba(231, 181, 106, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(231, 181, 106, 0.13);
+  color: var(--bun);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.email_btn:hover {
+  border-color: rgba(231, 181, 106, 0.45);
+  background: var(--bun);
+  color: var(--patty);
+  box-shadow: 0 12px 24px rgba(231, 181, 106, 0.2);
+  transform: translateY(-1px);
+}
+
+.email_btn:active {
+  transform: translateY(0);
+}
+
+.email_btn:disabled {
+  border-color: rgba(255, 248, 236, 0.08);
+  background: rgba(255, 248, 236, 0.08);
+  color: rgba(255, 248, 236, 0.34);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.timer_msg {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(231, 181, 106, 0.1);
+  border: 1px solid rgba(231, 181, 106, 0.22);
+  color: var(--bun);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.check_msg {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(85, 209, 135, 0.1);
+  border: 1px solid rgba(85, 209, 135, 0.25);
+  color: #55d187;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.invalid {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.25);
+  color: #ff6b6b;
+}
