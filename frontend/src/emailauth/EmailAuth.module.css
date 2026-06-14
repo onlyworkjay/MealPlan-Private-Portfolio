@@ -29,8 +29,8 @@
   height: 56px;
   border-radius: var(--r-sm);
   border: 1px solid rgba(231, 181, 106, 0.18);
-  background: rgba(12, 9, 7, 0.5);
-  color: var(--ivory);
+  background: var(--bg-alt);
+  color: var(--text);
   padding: 0 18px;
   font-size: 16px;
   outline: none;
@@ -41,13 +41,13 @@
 }
 
 .email_input::placeholder {
-  color: rgba(255, 248, 236, 0.38);
+  color: var(--text-light);
 }
 
 .email_input:focus {
-  border-color: var(--bun);
-  background: rgba(12, 9, 7, 0.72);
-  box-shadow: 0 0 0 4px rgba(231, 181, 106, 0.13);
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.13);
 }
 
 .email_input:read-only {
@@ -60,7 +60,7 @@
 .email_btn {
   min-width: 136px;
   height: 56px;
-  border: 1px solid rgba(231, 181, 106, 0.2);
+  border-color: rgba(255, 248, 236, 0.1);
   border-radius: var(--r-sm);
   background: var(--primary);
   color: var(--bg-alt);
@@ -77,9 +77,9 @@
 }
 
 .email_btn:hover {
-  border-color: rgba(231, 181, 106, 0.45);
-  background: var(--bun);
-  color: var(--patty);
+  border-color: var(--primary);
+  background: var(--primary-dark);
+  color: var(--text-light);
   box-shadow: 0 12px 24px rgba(231, 181, 106, 0.2);
   transform: translateY(-1px);
 }

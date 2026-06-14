@@ -9,18 +9,14 @@ const EmailAuth = ({
   setEmail,
   onVerified,
   readOnlyEmail,
-  //기존변수들에서 추가된 변수 --> placeholder
-  //-> 이렇게 하는 이유는 이메일과 관련된 역할이 다른 컴포넌트에서 고정된 멘트값을 넣으면
-  //-> 이상하기 때문에 placeholder값을 props로 받아서 상황에 맞는 멘트를 띄우게 하기 위해서
-  //-> 즉 placeholder라는 껍데기만 제공하고 각 컴포넌트에서 상황에 맞는 멘트를 넣어서 사용할 수 있게 하기 위해서
-  placeholder,
+  placeholder = "이메일을 입력해주세요.",
 }) => {
-  //2. 이메일 상태 구현, 인증 코드
+  // 2. 이메일 상태 구현, 인증 코드
   const [mailAuth, setMailAuth] = useState(0);
   const [mailAuthCode, setMailAuthCode] = useState("null");
   const [inputAuthCode, setInputAuthCode] = useState("");
 
-  //9. 시간, 타이머 설정
+  // 9. 시간, 타이머 설정
   const [time, setTime] = useState(180);
   const [timeExpired, setTimeExpired] = useState(false);
 
@@ -54,7 +50,7 @@ const EmailAuth = ({
       });
       return;
     }
-    //14. 이메일 정규식 패턴 검사
+    // 14. 이메일 정규식 패턴 검사
     if (!emailRegex.test(email)) {
       Swal.fire({
         title: "올바르지 않은 이메일 형식",
@@ -69,7 +65,7 @@ const EmailAuth = ({
     console.log("이메일 인증요청", payLoad);
     console.log("서버 주소", import.meta.env.VITE_BACKSERVER);
 
-    //6. 인증 메일 전송
+    // 6. 인증 메일 전송
     axios
       .post(`${import.meta.env.VITE_BACKSERVER}/users/email-verification`, {
         email,
@@ -78,8 +74,8 @@ const EmailAuth = ({
         console.log(res.data);
 
         setMailAuth(1);
-        //기존 setMailAuthCode(res.data)에서 아래 형식으로 변환
-        //-> 공백처리 문제등을 해결하기 위함
+        // 기존 setMailAuthCode(res.data)에서 아래 형식으로 변환
+        // -> 공백처리 문제등을 해결하기 위함
         setMailAuthCode(String(res.data).trim());
 
         // 인증 메일을 새로 보낼 때 타이머 초기화
@@ -96,7 +92,7 @@ const EmailAuth = ({
       });
   };
 
-  //10. 타이머 설정
+  // 10. 타이머 설정
   useEffect(() => {
     // 인증 메일을 보낸 상태가 아니면 타이머 실행 X
     if (mailAuth !== 1) return;
@@ -122,20 +118,20 @@ const EmailAuth = ({
     };
   }, [mailAuth, timeExpired]);
 
-  //11. 자세한 시간 설정
+  // 11. 자세한 시간 설정
   const showTime = () => {
     const min = Math.floor(time / 60);
     const sec = String(time % 60).padStart(2, "0");
     return `${min}:${sec}`;
   };
 
-  //8. 비교 인증
+  // 8. 비교 인증
   const verifyAuthCode = (e) => {
     e.preventDefault();
 
     if (mailAuth === 3) return;
-    //기존 이메일 인증 로직과 달라지는 점 --> servercode, inputcode추가
-    //--> 공백 처리와 관련하여 기능 수행하는 로직
+    // 기존 이메일 인증 로직과 달라지는 점 --> servercode, inputcode추가
+    // --> 공백 처리와 관련하여 기능 수행하는 로직
     const serverCode = String(mailAuthCode).trim();
     const inputCode = String(inputAuthCode).trim();
 
