@@ -1,27 +1,147 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./JoinPage.module.css";
+import axios from "axios";
 import Swal from "sweetalert2";
+import styles from "./JoinPage.module.css";
 import logo from "../assets/logo.svg";
 
 function JoinPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    email: "",
-    id: "",
-    nickname: "",
+
+  const [user, setUser] = useState({
+    loginId: "",
     password: "",
     passwordConfirm: "",
+    nickname: "",
+    email: "",
   });
+
+  const [checkId, setCheckId] = useState(0); // 0: 미확인/실패, 1: 사용가능
+  const [checkMsg, setCheckMsg] = useState("");
+  const [checkPwMsg, setCheckPwMsg] = useState("");
+  const [checkNicknameMsg, setCheckNicknameMsg] = useState("");
   const [pwMatch, setPwMatch] = useState(true);
 
-  const set = (key) => (e) => {
-    let value = e.target.value;
-
-    {
-      /* 닉네임 작성 시 한글, 영문, 숫자가 아니면 SWAL 출력 */
+  // 아이디 정규식 검사 (6~16자, 영문+숫자 혼합 필수)
+  const validateId = (id) => {
+    if (id.length === 0) return "";
+    if (id.length < 6) return "6자 이상 입력해야 합니다.";
+    if (id.length > 16) return "아이디의 길이는 16자 이하만 가능합니다.";
+    if (!/^[a-zA-Z0-9]*$/.test(id)) {
+      return "아이디는 영문과 숫자만 사용가능해요.";
     }
-    if (key === "nickname") {
+
+    const hasEnglish = /[a-zA-Z]/.test(id);
+    const hasNumber = /[0-9]/.test(id);
+
+    if (!hasEnglish || !hasNumber) {
+      return "아이디는 영문과 숫자를 모두 포함해야 합니다.";
+    }
+
+    return "";
+  };
+
+  // 비밀번호 정규식 검사 (8~16자, 영문+숫자+특수문자(!@#$%) 혼합 필수)
+  const validatePw = (pw) => {
+    if (pw.length === 0) return "";
+    if (pw.length < 8) return "비밀번호는 8자 이상 입력해야 합니다.";
+    if (pw.length > 16) return "비밀번호는 16자 이하만 가능합니다.";
+
+    if (!/^[a-zA-Z0-9!@#$%]*$/.test(pw)) {
+      return "비밀번호는 영문, 숫자, 특수문자(!@#$%)만 사용가능합니다.";
+    }
+
+    const hasEnglish = /[a-zA-Z]/.test(pw);
+    const hasNumber = /[0-9]/.test(pw);
+    const hasSpecial = /[!@#$%]/.test(pw);
+
+    if (!hasEnglish || !hasNumber || !hasSpecial) {
+      return "비밀번호는 영문, 숫자, 특수문자(!@#$%)를 모두 포함해야 합니다.";
+    }
+
+    return "안전한 비밀번호입니다.";
+  };
+
+  // 닉네임 길이 검사 (2~8자)
+  const validateNickname = (nickname) => {
+    if (nickname.length === 0) return "";
+    if (nickname.length < 2) return "닉네임은 2자 이상이어야 합니다.";
+    if (nickname.length > 8) return "닉네임은 8자 이하만 가능합니다.";
+    return "";
+  };
+
+  const inputUser = (e) => {
+    const { name, value } = e.target;
+
+    // 아이디 실시간 입력 제한 및 검증
+    if (name === "loginId") {
+      const hasHangul = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
+      const cleaned = value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, "");
+      setCheckId(0);
+
+      // 한글 입력 시 빨간 에러 메시지 표시
+      if (hasHangul) {
+        setCheckMsg("아이디는 영문과 숫자만 사용가능합니다.");
+        setUser((prev) => ({ ...prev, loginId: cleaned }));
+        return;
+      }
+
+      if (cleaned.length === 0) {
+        setCheckMsg("");
+        setUser((prev) => ({ ...prev, loginId: "" }));
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9]*$/.test(cleaned)) {
+        setCheckMsg("아이디는 영문과 숫자만 사용가능합니다.");
+        return;
+      }
+
+      if (cleaned.length > 16) {
+        setCheckMsg("아이디의 길이는 16자 이하만 가능합니다.");
+        return;
+      }
+
+      setCheckMsg(validateId(cleaned));
+      setUser((prev) => ({ ...prev, loginId: cleaned }));
+      return;
+    }
+
+    // 비밀번호 실시간 검증 (영문, 숫자, 특수문자(!@#$%) 허용)
+    if (name === "password") {
+      const cleaned = value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, "");
+
+      if (!/^[a-zA-Z0-9!@#$%]*$/.test(cleaned)) {
+        setCheckPwMsg(
+          "비밀번호는 영문, 숫자, 특수문자(!@#$%)만 사용가능합니다.",
+        );
+        return;
+      }
+
+      setCheckPwMsg(validatePw(cleaned));
+
+      setUser((prev) => {
+        const next = { ...prev, password: cleaned };
+        setPwMatch(
+          next.passwordConfirm === "" || next.passwordConfirm === cleaned,
+        );
+        return next;
+      });
+      return;
+    }
+
+    // 비밀번호 확인 일치 검사
+    if (name === "passwordConfirm") {
+      setUser((prev) => {
+        const next = { ...prev, passwordConfirm: value };
+        setPwMatch(next.password === value);
+        return next;
+      });
+      return;
+    }
+
+    // 닉네임: 한글/영문/숫자만 허용 + 길이 검증
+    if (name === "nickname") {
       const cleaned = value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, "");
       if (cleaned !== value) {
         Swal.fire({
@@ -31,70 +151,174 @@ function JoinPage() {
           confirmButtonColor: "#38BDF8",
         });
       }
-      value = cleaned;
+      setCheckNicknameMsg(validateNickname(cleaned));
+      setUser((prev) => ({ ...prev, nickname: cleaned }));
+      return;
     }
 
-    setForm((f) => {
-      const updated = { ...f, [key]: value };
-      if (key === "passwordConfirm") {
-        setPwMatch(updated.password === value);
-      }
-      if (key === "password") {
-        setPwMatch(
-          updated.passwordConfirm === "" || updated.passwordConfirm === value,
-        );
-      }
-      return updated;
-    });
+    // 이메일 등 일반 입력
+    setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // 아이디 중복체크 (onBlur)
+  const ipDupCheck = () => {
+    const loginId = user.loginId.trim();
+
+    if (loginId === "") {
+      setCheckId(0);
+      setCheckMsg("아이디를 입력하세요");
+      return;
+    }
+
+    const errorMessage = validateId(loginId);
+    if (errorMessage !== "") {
+      setCheckId(0);
+      setCheckMsg(errorMessage);
+      return;
+    }
+
+    axios
+      .get(`${import.meta.env.VITE_BACKSERVER}/users/check-id`, {
+        params: { loginId },
+      })
+      .then((res) => {
+        if (res.data === false) {
+          setCheckId(1);
+          setCheckMsg("사용가능한 아이디입니다");
+        } else {
+          setCheckId(0);
+          setCheckMsg("이미 사용중인 아이디입니다");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setCheckId(0);
+        setCheckMsg("아이디 중복 체크에 실패했습니다.");
+      });
+  };
+
+  // 이메일을 제외한 필수 항목 전체 검사 → 문제 목록 반환
+  const getRequiredFieldErrors = () => {
+    const errors = [];
+
+    // 아이디
+    if (user.loginId.trim() === "") {
+      errors.push("아이디를 입력해주세요.");
+    } else {
+      const idError = validateId(user.loginId);
+      if (idError !== "") {
+        errors.push(`아이디: ${idError}`);
+      } else if (checkId !== 1) {
+        errors.push("아이디 중복 확인을 완료해주세요.");
+      }
+    }
+
+    // 비밀번호
+    if (user.password.trim() === "") {
+      errors.push("비밀번호를 입력해주세요.");
+    } else {
+      const pwError = validatePw(user.password);
+      if (pwError !== "안전한 비밀번호입니다.") {
+        errors.push(`비밀번호: ${pwError}`);
+      }
+    }
+
+    // 비밀번호 확인
+    if (user.passwordConfirm.trim() === "") {
+      errors.push("비밀번호 확인을 입력해주세요.");
+    } else if (!pwMatch) {
+      errors.push("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+    }
+
+    // 닉네임
+    if (user.nickname.trim() === "") {
+      errors.push("닉네임을 입력해주세요.");
+    } else {
+      const nicknameError = validateNickname(user.nickname);
+      if (nicknameError !== "") {
+        errors.push(`닉네임: ${nicknameError}`);
+      }
+    }
+
+    return errors;
+  };
+
+  // 회원가입 제출
+  const joinUser = async (e) => {
     e.preventDefault();
-    navigate("/users/login");
-  };
 
-  const FIELDS = [
-    {
-      key: "email",
-      label: "이메일",
-      type: "email",
-      required: false,
-      placeholder: "이메일 (선택)",
-      hint: "입력하지 않아도 가입 가능합니다",
-    },
-    {
-      key: "id",
-      label: "아이디",
-      type: "text",
-      required: true,
-      placeholder: "영문 + 숫자 6~16자",
-      hint: "최소 6글자, 최대 16글자 (영문·숫자 혼합 필수)",
-    },
-    {
-      key: "nickname",
-      label: "닉네임",
-      type: "text",
-      required: true,
-      placeholder: "2~8자 (영문·숫자·한글)",
-      hint: "최소 2글자, 최대 8글자 (영문, 숫자, 한글만 허용)",
-    },
-    {
-      key: "password",
-      label: "비밀번호",
-      type: "password",
-      required: true,
-      placeholder: "영문 + 숫자 + 특수문자 8~16자",
-      hint: "최소 8글자, 최대 16글자 (영문·숫자·특수문자 혼합 필수)",
-    },
-    {
-      key: "passwordConfirm",
-      label: "비밀번호 확인",
-      type: "password",
-      required: true,
-      placeholder: "비밀번호 재입력",
-      hint: "",
-    },
-  ];
+    // 이메일을 제외한 필수 항목 전체 검사
+    const errors = getRequiredFieldErrors();
+    if (errors.length > 0) {
+      Swal.fire({
+        title: "입력 내용을 확인해주세요",
+        html: errors.map((msg) => `• ${msg}`).join("<br/>"),
+        icon: "warning",
+      });
+      return;
+    }
+
+    // 이메일 형식 검사 (입력한 경우에만)
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (user.email.trim() !== "" && !emailRegex.test(user.email)) {
+      Swal.fire({
+        title: "올바르지 않은 이메일 형식입니다",
+        text: "이메일 주소를 다시 확인해 주시기 바랍니다",
+        icon: "error",
+      });
+      return;
+    }
+
+    // 이메일을 입력하지 않은 경우 경고 후 선택 유도
+    if (user.email.trim() === "") {
+      const result = await Swal.fire({
+        title: "이메일을 입력하지 않으셨습니다",
+        text: "나중에 아이디와 비밀번호를 찾으실 수 없습니다. 그래도 진행하시겠습니까?",
+        icon: "warning",
+        confirmButtonText: "회원가입 중단",
+        confirmButtonColor: "green",
+        showDenyButton: true,
+        denyButtonText: "아니오, 그냥 가입할게요",
+        denyButtonColor: "gray",
+      });
+
+      if (result.isConfirmed || !result.isDenied) {
+        return;
+      }
+    }
+
+    const payload = {
+      loginId: user.loginId,
+      password: user.password,
+      nickname: user.nickname,
+      email: user.email.trim() === "" ? null : user.email.trim(),
+    };
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/join`, payload)
+      .then((res) => {
+        console.log(res.data);
+        Swal.fire({
+          title: "회원가입 완료",
+          text: "로그인 페이지로 이동합니다.",
+          icon: "success",
+          confirmButtonText: "로그인 페이지로 이동",
+          confirmButtonColor: "green",
+        }).then(() => {
+          navigate("/users/login");
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        const errorMessage =
+          err.response?.data || "회원가입 중 오류가 발생했습니다.";
+        Swal.fire({
+          title: "회원가입에 실패하셨습니다",
+          text: errorMessage,
+          icon: "warning",
+        });
+      });
+  };
 
   return (
     <div className={`${styles.join_page} ${styles.join_page_top}`}>
@@ -107,6 +331,7 @@ function JoinPage() {
             Meal<span>Plan</span>
           </span>
         </div>
+
         <h2 className={styles.join_heading}>회원가입</h2>
         <p className={styles.join_sub}>식단 기록을 시작해 볼까요?</p>
         <p className={styles.join_required_notice}>
@@ -116,56 +341,138 @@ function JoinPage() {
             표시는 필수 항목입니다.
           </span>
         </p>
-        <form onSubmit={handleSubmit}>
-          {FIELDS.map(({ key, label, type, required, placeholder, hint }) => (
-            <div className={styles.form_group} key={key}>
-              <label className={styles.form_label}>
-                {label} {required && <span className={styles.required}>*</span>}
-              </label>
-              <input
-                type={type}
-                className={styles.form_input}
-                placeholder={placeholder}
-                value={form[key]}
-                onChange={set(key)}
-                required={required}
-              />
-              {hint && <div className={styles.form_hint}>{hint}</div>}
-              {key === "id" && form.id && (
-                <div className={`${styles.form_hint} ${styles.form_hint_info}`}>
-                  ※ 이메일, 아이디, 닉네임은 중복 안 됩니다
-                </div>
-              )}
-              {key === "passwordConfirm" && form.passwordConfirm && (
-                <div
-                  className={pwMatch ? styles.form_success : styles.form_error}
-                >
-                  {pwMatch
-                    ? "비밀번호가 일치합니다!"
-                    : "비밀번호가 일치하지 않습니다."}
-                </div>
-              )}
+
+        <form onSubmit={joinUser}>
+          {/* 아이디 */}
+          <div className={styles.form_group}>
+            <label className={styles.form_label}>
+              아이디 <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              name="loginId"
+              className={styles.form_input}
+              placeholder="영문 + 숫자 혼합, 6~16자"
+              value={user.loginId}
+              onChange={inputUser}
+              onBlur={ipDupCheck}
+              autoComplete="username"
+            />
+            {checkMsg && (
+              <div
+                className={
+                  checkId === 1 ? styles.form_success : styles.form_error
+                }
+              >
+                {checkMsg}
+              </div>
+            )}
+          </div>
+
+          {/* 닉네임 */}
+          <div className={styles.form_group}>
+            <label className={styles.form_label}>
+              닉네임 <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              name="nickname"
+              className={styles.form_input}
+              placeholder="2~8자 (영문·숫자·한글)"
+              value={user.nickname}
+              onChange={inputUser}
+              autoComplete="nickname"
+            />
+            {checkNicknameMsg && (
+              <div className={styles.form_error}>{checkNicknameMsg}</div>
+            )}
+          </div>
+
+          {/* 비밀번호 */}
+          <div className={styles.form_group}>
+            <label className={styles.form_label}>
+              비밀번호 <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="password"
+              name="password"
+              className={styles.form_input}
+              placeholder="영문 + 숫자 + 특수문자(!@#$%) 조합, 8~16자"
+              value={user.password}
+              onChange={inputUser}
+              autoComplete="new-password"
+            />
+            {checkPwMsg && (
+              <div
+                className={
+                  checkPwMsg.includes("안전")
+                    ? styles.form_success
+                    : styles.form_error
+                }
+              >
+                {checkPwMsg}
+              </div>
+            )}
+          </div>
+
+          {/* 비밀번호 확인 */}
+          <div className={styles.form_group}>
+            <label className={styles.form_label}>
+              비밀번호 확인 <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="password"
+              name="passwordConfirm"
+              className={styles.form_input}
+              placeholder="비밀번호 재입력"
+              value={user.passwordConfirm}
+              onChange={inputUser}
+              autoComplete="new-password"
+            />
+            {user.passwordConfirm && (
+              <div
+                className={pwMatch ? styles.form_success : styles.form_error}
+              >
+                {pwMatch
+                  ? "비밀번호가 일치합니다!"
+                  : "비밀번호가 일치하지 않습니다."}
+              </div>
+            )}
+          </div>
+
+          {/* 이메일 */}
+          <div className={styles.form_group}>
+            <label className={styles.form_label}>이메일</label>
+            <input
+              type="email"
+              name="email"
+              className={styles.form_input}
+              placeholder="이메일 (선택)"
+              value={user.email}
+              onChange={inputUser}
+              autoComplete="email"
+            />
+            <div className={styles.form_hint}>
+              이메일은 필수가 아닌 선택 사항입니다. (아이디·비밀번호 찾기에
+              사용됩니다)
             </div>
-          ))}
-          <button
-            type="submit"
-            className={`btn btn-primary ${styles.join_submit}`}
-          >
-            가입하기
+          </div>
+
+          <button className={styles.join_submit} type="submit">
+            회원가입
           </button>
         </form>
-        <p className={styles.join_footer}>
-          이미 계정이 있으신가요?{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/users/login");
-            }}
+
+        <div className={styles.join_footer}>
+          <span>이미 계정이 있으신가요? </span>
+          <button
+            type="button"
+            className={styles.login_link_btn}
+            onClick={() => navigate("/users/login")}
           >
             로그인
-          </a>
-        </p>
+          </button>
+        </div>
       </div>
     </div>
   );

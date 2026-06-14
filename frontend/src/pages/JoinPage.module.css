@@ -90,6 +90,29 @@
 .join_submit {
   width: 100%;
   margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 32px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(56, 189, 248, 0.35);
+  cursor: pointer;
+  transition:
+    background var(--ease),
+    transform var(--ease),
+    box-shadow var(--ease);
+}
+
+.join_submit:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.4);
 }
 
 .join_footer {
@@ -106,6 +129,20 @@
 }
 
 .join_footer a:hover {
+  text-decoration: underline;
+}
+
+.login_link_btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.login_link_btn:hover {
   text-decoration: underline;
 }
 
