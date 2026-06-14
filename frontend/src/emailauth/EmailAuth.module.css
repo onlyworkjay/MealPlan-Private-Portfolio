@@ -27,7 +27,7 @@
   flex: 1 1 auto;
   min-width: 0;
   height: 56px;
-  border-radius: var(--radius-md);
+  border-radius: var(--r-sm);
   border: 1px solid rgba(231, 181, 106, 0.18);
   background: rgba(12, 9, 7, 0.5);
   color: var(--ivory);
@@ -61,9 +61,9 @@
   min-width: 136px;
   height: 56px;
   border: 1px solid rgba(231, 181, 106, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(231, 181, 106, 0.13);
-  color: var(--bun);
+  border-radius: var(--r-sm);
+  background: var(--primary);
+  color: var(--bg-alt);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
