@@ -7,6 +7,7 @@ import MainPage from "./pages/MainPage";
 import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
 import FindIdPage from "./pages/FindIdPage";
+import FindPwPage from "./pages/FindPwPage";
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
@@ -22,6 +23,8 @@ function App() {
         <Route path="/users/join" element={<JoinPage />} />
         {/* ⬆️ 회원가입 */}
         <Route path="/users/find-id" element={<FindIdPage />} />
+        {/* ⬆️ 아이디 찾기 */}
+        <Route path="/users/find-pw" element={<FindPwPage />} />
       </Routes>
       <Footer />
     </>

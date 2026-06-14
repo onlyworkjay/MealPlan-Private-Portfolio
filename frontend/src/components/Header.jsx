@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Header.module.css";
 
 import logo from "../assets/logo.svg";
@@ -10,10 +10,15 @@ const NAV_LINKS = [
   { label: "통계", href: "/mealplan/stats" },
 ];
 
-export default function Header({ isLoggedIn, user, onLogout }) {
+const PUBLIC_NAV_LINKS = NAV_LINKS.filter((link) => link.label !== "통계");
+
+const Header = ({ isLoggedIn, user, onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const navLinks = isLoggedIn ? NAV_LINKS : PUBLIC_NAV_LINKS;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -33,10 +38,16 @@ export default function Header({ isLoggedIn, user, onLogout }) {
     navigate(path);
   };
 
+  const handleCloseMenu = () => {
+    setMenuOpen(false);
+  };
+
   return (
     <>
       <nav
-        className={`${styles.navbar} ${scrolled ? styles.navbar_scrolled : ""}`}
+        className={[styles.navbar, scrolled ? styles.navbar_scrolled : ""]
+          .filter(Boolean)
+          .join(" ")}
       >
         <div className={styles.nav_inner}>
           <button className={styles.nav_logo} onClick={() => goTo("/mealplan")}>
@@ -53,23 +64,25 @@ export default function Header({ isLoggedIn, user, onLogout }) {
             </div>
           </button>
 
-          {isLoggedIn && (
-            <div className={styles.nav_center}>
-              {NAV_LINKS.map(({ label, href }) => (
-                <a
-                  key={href}
-                  href={href}
-                  className={`${styles.nav_center_link} ${location.pathname === href ? styles.nav_center_link_active : ""}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    goTo(href);
-                  }}
-                >
-                  {label}
-                </a>
-              ))}
-            </div>
-          )}
+          <div className={styles.nav_center}>
+            {navLinks.map(({ label, href }) => (
+              <Link
+                key={href}
+                to={href}
+                className={[
+                  styles.nav_center_link,
+                  location.pathname === href
+                    ? styles.nav_center_link_active
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={handleCloseMenu}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
 
           <div className={styles.nav_auth}>
             {isLoggedIn ? (
@@ -104,7 +117,12 @@ export default function Header({ isLoggedIn, user, onLogout }) {
               </>
             )}
             <button
-              className={`${styles.hamburger} ${menuOpen ? styles.hamburger_open : ""}`}
+              className={[
+                styles.hamburger,
+                menuOpen ? styles.hamburger_open : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="메뉴"
             >
@@ -117,22 +135,21 @@ export default function Header({ isLoggedIn, user, onLogout }) {
       </nav>
 
       <div
-        className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_open : ""}`}
+        className={`${styles.mobile_menu} ${
+          menuOpen ? styles.mobile_menu_open : ""
+        }`}
       >
         {isLoggedIn ? (
           <>
-            {NAV_LINKS.map(({ label, href }) => (
-              <a
+            {navLinks.map(({ label, href }) => (
+              <Link
                 key={href}
-                href={href}
+                to={href}
                 className={styles.mobile_menu_link}
-                onClick={(e) => {
-                  e.preventDefault();
-                  goTo(href);
-                }}
+                onClick={handleCloseMenu}
               >
                 {label}
-              </a>
+              </Link>
             ))}
             <div className={styles.mobile_menu_divider} />
             <div className={styles.mobile_auth}>
@@ -161,16 +178,16 @@ export default function Header({ isLoggedIn, user, onLogout }) {
           </>
         ) : (
           <>
-            <a
-              href="/mealplan"
-              className={styles.mobile_menu_link}
-              onClick={(e) => {
-                e.preventDefault();
-                goTo("/mealplan");
-              }}
-            >
-              🍽️ 피드 둘러보기
-            </a>
+            {navLinks.map(({ label, href }) => (
+              <Link
+                key={href}
+                to={href}
+                className={styles.mobile_menu_link}
+                onClick={handleCloseMenu}
+              >
+                {label}
+              </Link>
+            ))}
             <div className={styles.mobile_menu_divider} />
             <div className={styles.mobile_auth}>
               <button
@@ -191,4 +208,6 @@ export default function Header({ isLoggedIn, user, onLogout }) {
       </div>
     </>
   );
-}
+};
+
+export default Header;

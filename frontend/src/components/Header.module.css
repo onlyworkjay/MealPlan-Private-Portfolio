@@ -10,9 +10,11 @@
   border-bottom: 1px solid var(--border);
   transition: box-shadow var(--ease);
 }
+
 .navbar_scrolled {
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.07);
 }
+
 .nav_inner {
   max-width: var(--max-w);
   margin: 0 auto;
@@ -22,6 +24,7 @@
   align-items: center;
   justify-content: space-between;
 }
+
 .nav_logo {
   display: flex;
   align-items: center;
@@ -34,6 +37,7 @@
   border: none;
   cursor: pointer;
 }
+
 .nav_logo_icon {
   width: 36px;
   height: 36px;
@@ -49,21 +53,26 @@
   font-size: 18px;
   box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
 }
+
 .nav_logo_text {
   display: flex;
   align-items: baseline;
   gap: 1px;
 }
+
 .meal {
   color: var(--primary-dark);
 }
+
 .plan {
   color: var(--primary);
 }
+
 .nav_center {
   display: flex;
   gap: 2px;
 }
+
 .nav_center_link {
   font-size: 14px;
   font-weight: 500;
@@ -74,16 +83,19 @@
     color var(--ease),
     background var(--ease);
 }
+
 .nav_center_link:hover,
 .nav_center_link_active {
   color: var(--primary-dark);
   background: var(--primary-soft);
 }
+
 .nav_auth {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .hamburger {
   display: none;
   flex-direction: column;
@@ -94,6 +106,7 @@
   border-radius: var(--r-sm);
   cursor: pointer;
 }
+
 .hamburger_line {
   display: block;
   width: 24px;
@@ -104,6 +117,7 @@
     transform 0.3s ease,
     opacity 0.3s ease;
 }
+
 .hamburger_open .hamburger_line:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
@@ -139,24 +153,29 @@
   border-radius: var(--r-sm);
   transition: background var(--ease);
 }
+
 .mobile_menu_link:hover {
   background: var(--primary-soft);
   color: var(--primary-dark);
 }
+
 .mobile_menu_divider {
   height: 1px;
   background: var(--border);
   margin: 8px 0;
 }
+
 .mobile_auth {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .mobile_auth_btn {
   width: 100%;
   text-align: center;
 }
+
 .mobile_logout_btn {
   font-size: 13px;
   color: var(--text-light);
@@ -166,6 +185,7 @@
   padding: 8px 0;
   font-family: inherit;
 }
+
 @media (max-width: 768px) {
   .nav_center {
     display: none;

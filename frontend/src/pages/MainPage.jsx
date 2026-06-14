@@ -52,30 +52,6 @@ const MOCK_POSTS = [
     thumb:
       "https://images.unsplash.com/photo-1571748982800-fa51082c2224?w=400&q=80",
   },
-  {
-    id: 5,
-    user: "정뉴트리",
-    avatar: "정",
-    date: "2025.06.09",
-    title: "비빔밥 한 그릇으로 영양 채우기",
-    content: "채소 듬뿍 비빔밥. 나물 종류만 7가지 넣었더니 색깔이 예쁘다",
-    calories: 510,
-    images: 2,
-    thumb:
-      "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=80",
-  },
-  {
-    id: 6,
-    user: "강피트니스",
-    avatar: "강",
-    date: "2025.06.09",
-    title: "단백질 스무디 아침 루틴",
-    content: "프로틴 + 바나나 + 아몬드밀크. 운동 후 30분 안에 마시기!",
-    calories: 290,
-    images: 1,
-    thumb:
-      "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=400&q=80",
-  },
 ];
 
 function MiniCalendar({ onDateSelect }) {
@@ -162,6 +138,23 @@ const MainPage = () => {
       (!selectedDate || p.date === selectedDate.replace(/-/g, ".")),
   );
 
+  // === 오늘의 통계 계산 ===
+  const totalPosts = MOCK_POSTS.length;
+
+  const avgCalories =
+    totalPosts === 0
+      ? 0
+      : Math.round(
+          MOCK_POSTS.reduce((sum, p) => sum + p.calories, 0) / totalPosts,
+        );
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}.${String(
+    today.getMonth() + 1,
+  ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+
+  const todayCount = MOCK_POSTS.filter((p) => p.date === todayStr).length;
+
   return (
     <div className={styles.page}>
       {!isLoggedIn && (
@@ -184,13 +177,13 @@ const MainPage = () => {
             <div className={styles.heroBtns}>
               <button
                 className="btn btn-primary btn-lg"
-                onClick={() => navigate("/mealplan/join")}
+                onClick={() => navigate("/users/join")}
               >
-                무료로 시작하기 →
+                회원가입 하러 가기
               </button>
               <button
                 className="btn btn-ghost btn-lg"
-                onClick={() => navigate("/mealplan/login")}
+                onClick={() => navigate("/users/login")}
               >
                 로그인
               </button>
@@ -315,9 +308,9 @@ const MainPage = () => {
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📊 오늘의 통계</div>
               {[
-                { label: "총 게시물", val: "6개" },
-                { label: "평균 칼로리", val: "428 kcal" },
-                { label: "오늘 기록", val: "2개" },
+                { label: "총 게시물", val: `${totalPosts}개` },
+                { label: "평균 칼로리", val: `${avgCalories} kcal` },
+                { label: "오늘 기록", val: `${todayCount}개` },
               ].map((s) => (
                 <div className={styles.statRow} key={s.label}>
                   <span className={styles.statLabel}>{s.label}</span>
