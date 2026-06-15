@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -21,6 +21,15 @@ function JoinPage() {
   const [checkPwMsg, setCheckPwMsg] = useState("");
   const [checkNicknameMsg, setCheckNicknameMsg] = useState("");
   const [pwMatch, setPwMatch] = useState(true);
+
+  // 이메일 인증 관련 state
+  const [emailCode, setEmailCode] = useState("");
+  const [emailVerify, setEmailVerify] = useState({
+    sent: false, // 인증번호 발송 여부 (타이머 진행중)
+    verified: false, // 인증 완료 여부
+    timer: 0, // 남은 시간(초)
+  });
+  const timerRef = useRef(null);
 
   // 아이디 정규식 검사 (6~16자, 영문+숫자 혼합 필수)
   const validateId = (id) => {
@@ -107,7 +116,7 @@ function JoinPage() {
       return;
     }
 
-    // 비밀번호 실시간 검증 (영문, 숫자, 특수문자(!@#$%) 허용)
+    // 비밀번호 실시간 검증 (영문, 숫자, 그리고 특수문자 중에 (!, @, #, $, %) 5개만 허용)
     if (name === "password") {
       const cleaned = value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, "");
 
@@ -156,7 +165,16 @@ function JoinPage() {
       return;
     }
 
-    // 이메일 등 일반 입력
+    // 이메일 입력 시: 값이 바뀌면 기존 인증 상태 초기화
+    if (name === "email") {
+      setEmailVerify({ sent: false, verified: false, timer: 0 });
+      setEmailCode("");
+      clearInterval(timerRef.current);
+      setUser((prev) => ({ ...prev, email: value }));
+      return;
+    }
+
+    // 기타 일반 입력
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -194,6 +212,133 @@ function JoinPage() {
         console.log(err);
         setCheckId(0);
         setCheckMsg("아이디 중복 체크에 실패했습니다.");
+      });
+  };
+
+  // 이메일 인증 관련
+
+  // 타이머 포맷 (mm:ss)
+  const formatTime = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // 3분 타이머 시작
+  const startEmailTimer = () => {
+    clearInterval(timerRef.current);
+    setEmailVerify((prev) => ({
+      ...prev,
+      sent: true,
+      verified: false,
+      timer: 180,
+    }));
+
+    timerRef.current = setInterval(() => {
+      setEmailVerify((prev) => {
+        if (prev.timer <= 1) {
+          clearInterval(timerRef.current);
+          return { ...prev, timer: 0, sent: false };
+        }
+        return { ...prev, timer: prev.timer - 1 };
+      });
+    }, 1000);
+  };
+
+  // 컴포넌트 unmount 시 타이머 정리
+  useEffect(() => {
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  // 인증번호 전송
+  const sendEmailCode = () => {
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    if (user.email.trim() === "") {
+      Swal.fire({
+        icon: "warning",
+        title: "이메일을 입력해주세요",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
+    if (!emailRegex.test(user.email)) {
+      Swal.fire({
+        icon: "warning",
+        title: "올바르지 않은 이메일 형식입니다",
+        text: "이메일 주소를 다시 확인해 주세요.",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/email-verification`, {
+        email: user.email.trim(),
+      })
+      .then(() => {
+        Swal.fire({
+          icon: "success",
+          title: "인증번호가 전송되었습니다",
+          text: "이메일을 확인해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
+        setEmailCode("");
+        startEmailTimer();
+      })
+      .catch((err) => {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "인증번호 전송에 실패했습니다",
+          text: err.response?.data || "잠시 후 다시 시도해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
+      });
+  };
+
+  // 인증번호 확인
+  const verifyEmailCode = () => {
+    if (emailCode.trim() === "") {
+      Swal.fire({
+        icon: "warning",
+        title: "인증번호를 입력해주세요",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKSERVER}/users/email-verification/confirm`,
+        {
+          email: user.email.trim(),
+          code: emailCode.trim(),
+        },
+      )
+      .then(() => {
+        clearInterval(timerRef.current);
+        setEmailVerify((prev) => ({
+          ...prev,
+          sent: false,
+          verified: true,
+          timer: 0,
+        }));
+        Swal.fire({
+          icon: "success",
+          title: "이메일 인증이 완료되었습니다",
+          confirmButtonColor: "#38BDF8",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "인증번호가 일치하지 않습니다",
+          text: err.response?.data || "다시 시도해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
       });
   };
 
@@ -265,6 +410,16 @@ function JoinPage() {
         title: "올바르지 않은 이메일 형식입니다",
         text: "이메일 주소를 다시 확인해 주시기 바랍니다",
         icon: "error",
+      });
+      return;
+    }
+
+    // 이메일을 입력했지만 인증을 완료하지 않은 경우
+    if (user.email.trim() !== "" && !emailVerify.verified) {
+      Swal.fire({
+        title: "이메일 인증을 완료해주세요",
+        text: "인증번호 전송 후 인증을 완료해야 합니다.",
+        icon: "warning",
       });
       return;
     }
@@ -443,15 +598,62 @@ function JoinPage() {
           {/* 이메일 */}
           <div className={styles.form_group}>
             <label className={styles.form_label}>이메일</label>
-            <input
-              type="email"
-              name="email"
-              className={styles.form_input}
-              placeholder="이메일 (선택)"
-              value={user.email}
-              onChange={inputUser}
-              autoComplete="email"
-            />
+
+            <div className={styles.email_row}>
+              <input
+                type="email"
+                name="email"
+                className={`${styles.form_input} ${styles.email_input}`}
+                placeholder="이메일 (선택)"
+                value={user.email}
+                onChange={inputUser}
+                autoComplete="email"
+                disabled={emailVerify.verified}
+              />
+              <button
+                type="button"
+                className={styles.email_send_btn}
+                onClick={sendEmailCode}
+                disabled={emailVerify.sent || emailVerify.verified}
+              >
+                {emailVerify.verified
+                  ? "인증완료"
+                  : emailVerify.sent
+                    ? "재전송"
+                    : "인증번호 전송"}
+              </button>
+            </div>
+
+            {/* 인증번호 입력 + 타이머 */}
+            {emailVerify.sent && !emailVerify.verified && (
+              <div className={styles.email_row} style={{ marginTop: "8px" }}>
+                <input
+                  type="text"
+                  className={`${styles.form_input} ${styles.email_input}`}
+                  placeholder="인증번호 입력"
+                  value={emailCode}
+                  onChange={(e) => setEmailCode(e.target.value)}
+                  maxLength={6}
+                />
+                <span className={styles.email_timer}>
+                  {formatTime(emailVerify.timer)}
+                </span>
+                <button
+                  type="button"
+                  className={styles.email_send_btn}
+                  onClick={verifyEmailCode}
+                >
+                  확인
+                </button>
+              </div>
+            )}
+
+            {emailVerify.verified && (
+              <div className={styles.form_success}>
+                이메일 인증이 완료되었습니다.
+              </div>
+            )}
+
             <div className={styles.form_hint}>
               이메일은 필수가 아닌 선택 사항입니다. (아이디·비밀번호 찾기에
               사용됩니다)

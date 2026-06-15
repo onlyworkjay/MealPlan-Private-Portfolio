@@ -1,4 +1,4 @@
-/* 페이지 전체 wrap*/
+/* 페이지 전체 wrap */
 .join_page {
   min-height: calc(100vh - var(--nav-h));
   display: flex;
@@ -52,6 +52,7 @@
   margin-bottom: 28px;
 }
 
+/* Meal이랑 Plan 아이콘 */
 .join_logo_icon {
   width: 40px;
   height: 40px;
@@ -202,8 +203,64 @@
   margin-top: 4px;
 }
 
+/* 이메일 인증 영역 */
+.email_row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.email_input {
+  flex: 1;
+  min-width: 0;
+}
+
+.email_send_btn {
+  flex-shrink: 0;
+  height: 41px;
+  padding: 0 14px;
+  border: 1.5px solid var(--primary);
+  border-radius: var(--r-sm);
+  background: #fff;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--ease),
+    color var(--ease);
+}
+
+.email_send_btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.email_send_btn:disabled {
+  border-color: var(--border);
+  color: var(--text-light);
+  cursor: not-allowed;
+  background: var(--bg-alt);
+}
+
+/* 이메일 유효시간 */
+.email_timer {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ef4444;
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: center;
+}
+
 @media (max-width: 480px) {
   .join_card {
     padding: 28px 18px;
+  }
+
+  .email_send_btn {
+    padding: 0 10px;
+    font-size: 11px;
   }
 }
