@@ -19,7 +19,11 @@ function JoinPage() {
   const [checkId, setCheckId] = useState(0); // 0: 미확인/실패, 1: 사용가능
   const [checkMsg, setCheckMsg] = useState("");
   const [checkPwMsg, setCheckPwMsg] = useState("");
+
+  // 닉네임 관련 상태
+  const [checkNickname, setCheckNickname] = useState(0); // 0: 미확인/실패, 1: 사용가능
   const [checkNicknameMsg, setCheckNicknameMsg] = useState("");
+
   const [pwMatch, setPwMatch] = useState(true);
 
   // 이메일 인증 관련 state
@@ -160,6 +164,7 @@ function JoinPage() {
           confirmButtonColor: "#38BDF8",
         });
       }
+      setCheckNickname(0); // 닉네임 변경 시 중복확인 상태 초기화
       setCheckNicknameMsg(validateNickname(cleaned));
       setUser((prev) => ({ ...prev, nickname: cleaned }));
       return;
@@ -178,7 +183,7 @@ function JoinPage() {
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 아이디 중복체크 (onBlur)
+  // 아이디 중복체크 (버튼 클릭)
   const ipDupCheck = () => {
     const loginId = user.loginId.trim();
 
@@ -212,6 +217,43 @@ function JoinPage() {
         console.log(err);
         setCheckId(0);
         setCheckMsg("아이디 중복 체크에 실패했습니다.");
+      });
+  };
+
+  // 닉네임 중복체크 (버튼 클릭)
+  const nicknameDupCheck = () => {
+    const nickname = user.nickname.trim();
+
+    if (nickname === "") {
+      setCheckNickname(0);
+      setCheckNicknameMsg("닉네임을 입력하세요");
+      return;
+    }
+
+    const errorMessage = validateNickname(nickname);
+    if (errorMessage !== "") {
+      setCheckNickname(0);
+      setCheckNicknameMsg(errorMessage);
+      return;
+    }
+
+    axios
+      .get(`${import.meta.env.VITE_BACKSERVER}/users/check-nickname`, {
+        params: { nickname },
+      })
+      .then((res) => {
+        if (res.data === false) {
+          setCheckNickname(1);
+          setCheckNicknameMsg("사용가능한 닉네임입니다");
+        } else {
+          setCheckNickname(0);
+          setCheckNicknameMsg("이미 사용중인 닉네임입니다");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setCheckNickname(0);
+        setCheckNicknameMsg("닉네임 중복 체크에 실패했습니다.");
       });
   };
 
@@ -382,6 +424,8 @@ function JoinPage() {
       const nicknameError = validateNickname(user.nickname);
       if (nicknameError !== "") {
         errors.push(`닉네임: ${nicknameError}`);
+      } else if (checkNickname !== 1) {
+        errors.push("닉네임 중복 확인을 완료해주세요.");
       }
     }
 
@@ -503,16 +547,24 @@ function JoinPage() {
             <label className={styles.form_label}>
               아이디 <span className={styles.required}>*</span>
             </label>
-            <input
-              type="text"
-              name="loginId"
-              className={styles.form_input}
-              placeholder="영문 + 숫자 혼합, 6~16자"
-              value={user.loginId}
-              onChange={inputUser}
-              onBlur={ipDupCheck}
-              autoComplete="username"
-            />
+            <div className={styles.email_row}>
+              <input
+                type="text"
+                name="loginId"
+                className={`${styles.form_input} ${styles.email_input}`}
+                placeholder="영문 + 숫자 혼합, 6~16자"
+                value={user.loginId}
+                onChange={inputUser}
+                autoComplete="username"
+              />
+              <button
+                type="button"
+                className={styles.email_send_btn}
+                onClick={ipDupCheck}
+              >
+                중복 확인
+              </button>
+            </div>
             {checkMsg && (
               <div
                 className={
@@ -529,17 +581,32 @@ function JoinPage() {
             <label className={styles.form_label}>
               닉네임 <span className={styles.required}>*</span>
             </label>
-            <input
-              type="text"
-              name="nickname"
-              className={styles.form_input}
-              placeholder="2~8자 (영문·숫자·한글)"
-              value={user.nickname}
-              onChange={inputUser}
-              autoComplete="nickname"
-            />
+            <div className={styles.email_row}>
+              <input
+                type="text"
+                name="nickname"
+                className={`${styles.form_input} ${styles.email_input}`}
+                placeholder="2~8자 (영문·숫자·한글)"
+                value={user.nickname}
+                onChange={inputUser}
+                autoComplete="nickname"
+              />
+              <button
+                type="button"
+                className={styles.email_send_btn}
+                onClick={nicknameDupCheck}
+              >
+                중복 확인
+              </button>
+            </div>
             {checkNicknameMsg && (
-              <div className={styles.form_error}>{checkNicknameMsg}</div>
+              <div
+                className={
+                  checkNickname === 1 ? styles.form_success : styles.form_error
+                }
+              >
+                {checkNicknameMsg}
+              </div>
             )}
           </div>
 
