@@ -1,14 +1,46 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
 import styles from "./LoginPage.module.css";
 import logo from "../assets/logo.svg";
+import { useAuth } from "../contexts/AuthContext";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ id: "", password: "" });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate("/mealplan");
+
+    if (form.id.trim() === "" || form.password.trim() === "") {
+      Swal.fire({
+        icon: "warning",
+        title: "아이디와 비밀번호를 입력해주세요",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/login`, {
+        loginId: form.id,
+        password: form.password,
+      })
+      .then((res) => {
+        const { token, ...user } = res.data;
+        login(token, user);
+        navigate("/mealplan");
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "로그인에 실패했습니다",
+          text: err.response?.data || "아이디 또는 비밀번호를 확인해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
+      });
   };
 
   return (

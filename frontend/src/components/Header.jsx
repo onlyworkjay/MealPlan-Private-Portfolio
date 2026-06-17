@@ -91,13 +91,16 @@ const Header = ({ isLoggedIn, user, onLogout }) => {
                   className="btn btn-ghost btn-sm"
                   onClick={() => goTo("/mealplan/write")}
                 >
-                  ✏️ 기록하기
+                  기록하기
                 </button>
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={() => goTo("/mealplan/mypage")}
                 >
-                  👤 {user?.nickname ?? "내 정보"}
+                  마이페이지
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={onLogout}>
+                  로그아웃
                 </button>
               </>
             ) : (
