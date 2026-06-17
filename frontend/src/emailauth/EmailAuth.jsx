@@ -10,6 +10,7 @@ const EmailAuth = ({
   onVerified,
   readOnlyEmail,
   placeholder = "이메일을 입력해주세요.",
+  disableSend = false,
 }) => {
   // 2. 이메일 상태 구현, 인증 코드
   const [mailAuth, setMailAuth] = useState(0);
@@ -31,6 +32,8 @@ const EmailAuth = ({
   //4. 이메일 전송 함수 구현
   const sendMail = (e) => {
     e.preventDefault();
+
+    if (disableSend) return;
 
     if (mailAuth === 1) {
       Swal.fire({
@@ -175,13 +178,15 @@ const EmailAuth = ({
             type="button"
             className={styles.email_btn}
             onClick={sendMail}
-            disabled={mailAuth === 1 || mailAuth === 3}
+            disabled={disableSend || mailAuth === 1 || mailAuth === 3}
           >
-            {mailAuth === 1
-              ? "전송됨 "
-              : mailAuth === 3
-                ? "인증 완료"
-                : "인증 번호 전송"}
+            {disableSend
+              ? "인증 불가"
+              : mailAuth === 1
+                ? "전송됨 "
+                : mailAuth === 3
+                  ? "인증 완료"
+                  : "인증 번호 전송"}
           </button>
         </div>
 
