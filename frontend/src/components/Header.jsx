@@ -13,13 +13,24 @@ const NAV_LINKS = [
 
 const PUBLIC_NAV_LINKS = NAV_LINKS.filter((link) => link.label !== "통계");
 
-const Header = ({ isLoggedIn, user, onLogout }) => {
+const formatRemaining = (sec) => {
+  if (sec === null || sec === undefined) return "";
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
+const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = isLoggedIn ? NAV_LINKS : PUBLIC_NAV_LINKS;
+  const timerWarning =
+    remainingSeconds !== null &&
+    remainingSeconds !== undefined &&
+    remainingSeconds <= 300;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -88,6 +99,16 @@ const Header = ({ isLoggedIn, user, onLogout }) => {
           <div className={styles.nav_auth}>
             {isLoggedIn ? (
               <>
+                <div
+                  className={[
+                    styles.session_timer,
+                    timerWarning ? styles.session_timer_warning : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  ⏱️ {formatRemaining(remainingSeconds)}
+                </div>
                 <div className={styles.nav_profile}>
                   <img
                     src={user?.profileImg || defaultProfile}
@@ -98,7 +119,6 @@ const Header = ({ isLoggedIn, user, onLogout }) => {
                     {user?.nickname ?? "사용자"}
                   </span>
                 </div>
-
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={() => goTo("/mealplan/mypage")}
@@ -161,6 +181,17 @@ const Header = ({ isLoggedIn, user, onLogout }) => {
               </Link>
             ))}
             <div className={styles.mobile_menu_divider} />
+            <div
+              className={[
+                styles.session_timer,
+                timerWarning ? styles.session_timer_warning : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{ marginBottom: "8px" }}
+            >
+              ⏱️ 남은 시간 {formatRemaining(remainingSeconds)}
+            </div>
             <div className={styles.mobile_auth}>
               <button
                 className="btn btn-ghost"

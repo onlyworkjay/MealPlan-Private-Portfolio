@@ -121,6 +121,26 @@
   color: var(--text);
 }
 
+/* 헤더에 타이머(30분) */
+.session_timer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-sub);
+  background: var(--bg-alt);
+  padding: 4px 12px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+
+/* 로그인 하고 유효시간 5분 남았을 때 빨간색으로 표시 */
+.session_timer_warning {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
 .hamburger {
   display: none;
   flex-direction: column;

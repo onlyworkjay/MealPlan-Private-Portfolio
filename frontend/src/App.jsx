@@ -12,12 +12,17 @@ import FindPwPage from "./pages/FindPwPage";
 import ScrollToTop from "./components/ScrollToTop";
 
 function AppContent() {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout, remainingSeconds } = useAuth();
 
   return (
     <>
       <ScrollToTop />
-      <Header isLoggedIn={isLoggedIn} user={user} onLogout={logout} />
+      <Header
+        isLoggedIn={isLoggedIn}
+        user={user}
+        onLogout={logout}
+        remainingSeconds={remainingSeconds}
+      />
       <Routes>
         <Route path="/mealplan" element={<MainPage />} />
         <Route path="/users/login" element={<LoginPage />} />
