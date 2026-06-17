@@ -96,6 +96,31 @@
   gap: 8px;
 }
 
+/* 프로필 */
+.nav_profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+}
+
+/* 프로필 사진 */
+.nav_profile_img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* 회원 닉네임 */
+.nav_profile_name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .hamburger {
   display: none;
   flex-direction: column;

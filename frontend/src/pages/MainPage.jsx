@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./MainPage.module.css";
 import logo from "../assets/logo.svg";
+import { useAuth } from "../contexts/AuthContext";
 
 const MOCK_POSTS = [
   {
@@ -127,7 +128,7 @@ function MiniCalendar({ onDateSelect }) {
 }
 
 const MainPage = () => {
-  const isLoggedIn = false;
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);

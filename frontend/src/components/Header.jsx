@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Header.module.css";
 
 import logo from "../assets/logo.svg";
+import defaultProfile from "../assets/default-profile.svg";
 
 const NAV_LINKS = [
   { label: "피드", href: "/mealplan" },
@@ -87,12 +88,17 @@ const Header = ({ isLoggedIn, user, onLogout }) => {
           <div className={styles.nav_auth}>
             {isLoggedIn ? (
               <>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => goTo("/mealplan/write")}
-                >
-                  기록하기
-                </button>
+                <div className={styles.nav_profile}>
+                  <img
+                    src={user?.profileImg || defaultProfile}
+                    alt="프로필"
+                    className={styles.nav_profile_img}
+                  />
+                  <span className={styles.nav_profile_name}>
+                    {user?.nickname ?? "사용자"}
+                  </span>
+                </div>
+
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={() => goTo("/mealplan/mypage")}
