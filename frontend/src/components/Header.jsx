@@ -6,7 +6,7 @@ import logo from "../assets/logo.svg";
 import defaultProfile from "../assets/default-profile.svg";
 
 const NAV_LINKS = [
-  { label: "피드", href: "/mealplan" },
+  { label: "피드", href: "/" },
   { label: "날짜별 조회", href: "/mealplan/calendar" },
   { label: "통계", href: "/mealplan/stats" },
 ];
@@ -62,7 +62,7 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
           .join(" ")}
       >
         <div className={styles.nav_inner}>
-          <button className={styles.nav_logo} onClick={() => goTo("/mealplan")}>
+          <button className={styles.nav_logo} onClick={() => goTo("/")}>
             <img
               src={logo}
               alt="MealPlan 로고"
@@ -121,7 +121,7 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
                 </div>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => goTo("/mealplan/mypage")}
+                  onClick={() => goTo("/mypage")}
                 >
                   마이페이지
                 </button>
@@ -197,13 +197,13 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
                 className="btn btn-ghost"
                 onClick={() => goTo("/mealplan/write")}
               >
-                ✏️ 기록하기
+                기록하기
               </button>
               <button
-                className="btn btn-primary"
-                onClick={() => goTo("/mealplan/mypage")}
+                className="btn btn-primary btn-sm"
+                onClick={() => goTo("/mypage")}
               >
-                👤 마이페이지
+                마이페이지
               </button>
               <button
                 className={styles.mobile_logout_btn}

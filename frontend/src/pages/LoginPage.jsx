@@ -31,7 +31,7 @@ function LoginPage() {
       .then((res) => {
         const { token, ...user } = res.data;
         login(token, user);
-        navigate("/mealplan");
+        navigate("/");
       })
       .catch((err) => {
         Swal.fire({
