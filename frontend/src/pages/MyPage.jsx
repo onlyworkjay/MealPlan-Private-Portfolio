@@ -4,8 +4,10 @@ import Swal from "sweetalert2";
 import styles from "./MyPage.module.css";
 import EmailAuth from "../emailauth/EmailAuth";
 import defaultProfile from "../assets/default-profile.svg";
+import { useAuth } from "../contexts/AuthContext";
 
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,8}$/;
+const PW_PATTERN = /^[a-zA-Z0-9!@#$%]{8,16}$/;
 
 const MENU = [
   { key: "posts", label: "내 게시물" },
@@ -35,10 +37,13 @@ const MOCK_MY_POSTS = [
 ];
 
 export default function MyPage({ user, onLogout, onNavigate }) {
+  const { token, updateUser } = useAuth();
   const [tab, setTab] = useState("posts");
 
   // 프로필 사진
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [clearImage, setClearImage] = useState(false);
 
   // 닉네임 변경 + 중복확인
   const [nickname, setNickname] = useState("");
@@ -49,15 +54,34 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [email, setEmail] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
 
+  // 비밀번호 변경
+  const [pwStep, setPwStep] = useState(1);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [currentPasswordError, setCurrentPasswordError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMatch, setPasswordMatch] = useState(null);
+
+  // 회원 탈퇴
+  const [withdrawStep, setWithdrawStep] = useState(1);
+  const [withdrawPassword, setWithdrawPassword] = useState("");
+  const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
+
+  // 프로필 사진 변경
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPhotoFile(file);
+    setClearImage(false);
     const reader = new FileReader();
     reader.onload = () => setPhotoPreview(reader.result);
     reader.readAsDataURL(file);
   };
 
+  // 기본 이미지로 변경
   const handleResetPhoto = () => {
+    setPhotoFile(null);
+    setClearImage(true);
     setPhotoPreview(defaultProfile);
   };
 
@@ -118,12 +142,107 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       return;
     }
 
+    const formData = new FormData();
+    if (nickname.trim()) formData.append("nickname", nickname.trim());
+    if (email.trim()) formData.append("email", email.trim());
+    formData.append("clearProfileImage", clearImage);
+    if (photoFile) formData.append("profileImage", photoFile);
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/profile`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        updateUser(res.data);
+        setNickname("");
+        setNicknameChecked(false);
+        setNicknameAvailable(null);
+        setEmail("");
+        setEmailVerified(false);
+        setPhotoFile(null);
+        setClearImage(false);
+        setPhotoPreview(null);
+        Swal.fire({
+          icon: "success",
+          title: "저장되었습니다",
+          confirmButtonColor: "#38BDF8",
+        });
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "저장에 실패했습니다",
+          text: err.response?.data || "잠시 후 다시 시도해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
+      });
+  };
+
+  const handleVerifyCurrentPassword = () => {
+    if (!currentPassword.trim()) {
+      setCurrentPasswordError("현재 비밀번호를 입력해주세요");
+      return;
+    }
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/login`, {
+        loginId: user?.loginId,
+        password: currentPassword,
+      })
+      .then(() => {
+        setCurrentPasswordError("");
+        setPwStep(2);
+      })
+      .catch(() => {
+        setCurrentPasswordError("비밀번호가 일치하지 않습니다");
+      });
+  };
+
+  const handleChangePassword = () => {
+    if (!PW_PATTERN.test(newPassword)) {
+      Swal.fire({
+        icon: "warning",
+        title: "비밀번호 형식을 확인해주세요",
+        text: "영문·숫자·특수문자(!@#$%) 조합 8~16자여야 합니다",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Swal.fire({
+        icon: "warning",
+        title: "새 비밀번호가 일치하지 않습니다",
+        confirmButtonColor: "#38BDF8",
+      });
+      return;
+    }
+
     Swal.fire({
-      icon: "info",
-      title: "저장 기능은 아직 준비 중입니다",
-      text: "백엔드에 프로필 수정 API가 추가되면 연결될 예정이에요",
+      icon: "success",
+      title: "비밀번호 변경이 성공되었습니다",
       confirmButtonColor: "#38BDF8",
     });
+  };
+
+  const handleVerifyWithdrawPassword = () => {
+    if (!withdrawPassword.trim()) {
+      setWithdrawPasswordError("비밀번호를 입력해주세요");
+      return;
+    }
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/users/login`, {
+        loginId: user?.loginId,
+        password: withdrawPassword,
+      })
+      .then(() => {
+        setWithdrawPasswordError("");
+        setWithdrawStep(2);
+      })
+      .catch(() => {
+        setWithdrawPasswordError("비밀번호가 일치하지 않습니다");
+      });
   };
 
   return (
@@ -150,6 +269,17 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   className={tab === m.key ? styles.active : ""}
                   onClick={(e) => {
                     e.preventDefault();
+                    if (tab === "profile" && m.key !== "profile") {
+                      // 저장 안 하고 떠나는 거라서 임시로 골랐던 값들 전부 버리기
+                      setPhotoPreview(null);
+                      setPhotoFile(null);
+                      setClearImage(false);
+                      setNickname("");
+                      setNicknameChecked(false);
+                      setNicknameAvailable(null);
+                      setEmail("");
+                      setEmailVerified(false);
+                    }
                     setTab(m.key);
                   }}
                 >
@@ -235,7 +365,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                     <div className={styles.input_check_row}>
                       <input
                         className="form-input"
-                        placeholder="변경할 닉네임"
+                        placeholder="변경할 닉네임을 적어주세요."
                         value={nickname}
                         onChange={(e) => {
                           setNickname(e.target.value);
@@ -277,7 +407,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                       disableSend={!user?.email}
                     />
                     {!user?.email && (
-                      <div className="form-hint">
+                      <div className={`form-hint ${styles.warning_hint}`}>
                         이메일 없이 가입하셨기 때문에 인증번호 발송이
                         비활성화되어 있습니다.
                       </div>
@@ -300,49 +430,159 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   <h1>비밀번호 변경</h1>
                 </div>
                 <div className="write-card" style={{ maxWidth: "100%" }}>
-                  {["현재 비밀번호", "새 비밀번호", "새 비밀번호 확인"].map(
-                    (l) => (
-                      <div className="form-group" key={l}>
+                  {pwStep === 1 ? (
+                    <>
+                      <div className="form-group">
                         <label className="form-label">
-                          {l} <span className="required">*</span>
+                          현재 비밀번호 <span className="required">*</span>
                         </label>
                         <input
                           type="password"
                           className="form-input"
-                          placeholder={l}
+                          placeholder="현재 비밀번호"
+                          value={currentPassword}
+                          onChange={(e) => {
+                            setCurrentPassword(e.target.value);
+                            setCurrentPasswordError("");
+                          }}
+                        />
+                        {currentPasswordError && (
+                          <div className={styles.check_fail}>
+                            {currentPasswordError}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className="btn btn-primary"
+                        style={{ marginTop: 12 }}
+                        onClick={handleVerifyCurrentPassword}
+                      >
+                        확인
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="form-group">
+                        <label className="form-label">
+                          새 비밀번호 <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          className="form-input"
+                          placeholder="새 비밀번호"
+                          value={newPassword}
+                          onChange={(e) => {
+                            setNewPassword(e.target.value);
+                            setPasswordMatch(
+                              confirmPassword
+                                ? e.target.value === confirmPassword
+                                : null,
+                            );
+                          }}
                         />
                       </div>
-                    ),
+                      <div className="form-group">
+                        <label className="form-label">
+                          새 비밀번호 확인 <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          className="form-input"
+                          placeholder="새 비밀번호 확인"
+                          value={confirmPassword}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setConfirmPassword(value);
+                            setPasswordMatch(
+                              value ? newPassword === value : null,
+                            );
+                          }}
+                        />
+                        {passwordMatch === true && (
+                          <div className={styles.match_ok}>
+                            비밀번호가 일치합니다
+                          </div>
+                        )}
+                        {passwordMatch === false && (
+                          <div className={styles.check_fail}>
+                            비밀번호가 일치하지 않습니다
+                          </div>
+                        )}
+                      </div>
+                      <div className="form-hint">
+                        최소 8글자, 최대 16글자 (영문·숫자·특수문자 필수)
+                      </div>
+                      <button
+                        className="btn btn-primary"
+                        style={{ marginTop: 12 }}
+                        onClick={handleChangePassword}
+                      >
+                        변경하기
+                      </button>
+                    </>
                   )}
-                  <div className="form-hint">
-                    최소 8글자, 최대 16글자 (영문·숫자·특수문자 필수)
-                  </div>
-                  <button className="btn btn-primary" style={{ marginTop: 12 }}>
-                    변경하기
-                  </button>
                 </div>
               </>
             )}
 
             {tab === "withdraw" && (
-              <div className={styles.withdraw_section}>
-                <div className={styles.withdraw_icon}>😢</div>
-                <div className={styles.withdraw_title}>
-                  정말 탈퇴하시겠어요?
-                </div>
-                <div className={styles.withdraw_desc}>
-                  탈퇴 시 모든 게시물과 기록이 삭제되며 복구할 수 없습니다.
-                </div>
-                <button
-                  className={`btn btn-sm ${styles.btn_delete}`}
-                  onClick={() => {
-                    onLogout();
-                    onNavigate("feed");
-                  }}
-                >
-                  회원 탈퇴하기
-                </button>
-              </div>
+              <>
+                {withdrawStep === 1 ? (
+                  <>
+                    <div className="page-header">
+                      <h1>회원 탈퇴</h1>
+                    </div>
+                    <div className="write-card" style={{ maxWidth: "100%" }}>
+                      <div className="form-group">
+                        <label className="form-label">
+                          현재 비밀번호 <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          className="form-input"
+                          placeholder="현재 비밀번호"
+                          value={withdrawPassword}
+                          onChange={(e) => {
+                            setWithdrawPassword(e.target.value);
+                            setWithdrawPasswordError("");
+                          }}
+                        />
+                        {withdrawPasswordError && (
+                          <div className={styles.check_fail}>
+                            {withdrawPasswordError}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className="btn btn-primary"
+                        style={{ marginTop: 12 }}
+                        onClick={handleVerifyWithdrawPassword}
+                      >
+                        확인
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.withdraw_section}>
+                    <div className={styles.withdraw_icon}>😢</div>
+                    <div className={styles.withdraw_title}>
+                      정말 탈퇴하시겠어요?
+                    </div>
+                    <div className={styles.withdraw_desc}>
+                      탈퇴 시 모든 게시물과 기록이 삭제되며 복구할 수 없습니다.
+                    </div>
+                    <button
+                      className={`btn btn-sm ${styles.btn_delete}`}
+                      onClick={() => {
+                        onLogout();
+                        onNavigate("feed");
+                      }}
+                    >
+                      회원 탈퇴하기
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

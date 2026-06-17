@@ -36,6 +36,12 @@ public class EmailController {
 
         codeStore.put(email, authCode); // 코드 저장
 
+        // ↓↓↓ 추가: 콘솔에 인증번호 출력 (임시, 테스트용) ↓↓↓
+        System.out.println("=====================================");
+        System.out.println("[TEST] " + email + " 인증번호: " + authCode);
+        System.out.println("=====================================");
+
+
         String title = "MealPlan 이메일 인증번호";
         String content = "<h3>인증번호는 <b>" + authCode + "</b> 입니다.</h3>";
         emailSender.sendMail(title, email, content);

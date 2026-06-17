@@ -56,6 +56,15 @@ export function AuthProvider({ children }) {
     setRemainingSeconds(null);
   };
 
+  // 마이페이지에서 닉네임/이메일/프로필 사진 수정 성공 시, 화면 전체(헤더/사이드바)에 즉시 반영
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      const newUser = { ...prev, ...updatedFields };
+      localStorage.setItem("user", JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   const extendSession = async () => {
     try {
       const res = await axios.post(
@@ -144,6 +153,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         extendSession,
+        updateUser,
       }}
     >
       {children}

@@ -18,6 +18,7 @@
   padding: 28px 20px;
   text-align: center;
 }
+
 .profile_avatar {
   width: 72px;
   height: 72px;
@@ -27,16 +28,19 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
 }
+
 .profile_avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .profile_name {
   font-size: 17px;
   font-weight: 800;
   margin-bottom: 2px;
 }
+
 .profile_email {
   font-size: 12px;
   color: var(--text-light);
@@ -47,6 +51,7 @@
   flex-direction: column;
   gap: 2px;
 }
+
 .mypage_menu a {
   display: flex;
   align-items: center;
@@ -60,11 +65,13 @@
     background var(--ease),
     color var(--ease);
 }
+
 .mypage_menu a:hover,
 .mypage_menu a.active {
   background: var(--primary-soft);
   color: var(--primary-dark);
 }
+
 .mypage_logout {
   font-size: 13px;
   color: var(--text-light);
@@ -78,6 +85,7 @@
   transition: color var(--ease);
   margin-top: 8px;
 }
+
 .mypage_logout:hover {
   color: var(--text);
 }
@@ -93,27 +101,33 @@
   cursor: pointer;
   transition: box-shadow var(--ease);
 }
+
 .my_post_item:hover {
   box-shadow: var(--shadow-hover);
 }
+
 .my_post_title {
   font-weight: 700;
   margin-bottom: 2px;
 }
+
 .my_post_date {
   font-size: 12px;
   color: var(--text-light);
 }
+
 .my_post_right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .my_post_cal {
   font-size: 13px;
   font-weight: 700;
   color: var(--primary-dark);
 }
+
 .my_posts_list {
   display: flex;
   flex-direction: column;
@@ -130,15 +144,18 @@
   padding: 40px 0;
   text-align: center;
 }
+
 .withdraw_icon {
   font-size: 40px;
   margin-bottom: 12px;
 }
+
 .withdraw_title {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 8px;
 }
+
 .withdraw_desc {
   font-size: 14px;
   color: var(--text-sub);
@@ -153,6 +170,7 @@
   gap: 20px;
   margin-bottom: 28px;
 }
+
 .photo_preview {
   width: 88px;
   height: 88px;
@@ -162,16 +180,19 @@
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
+
 .photo_preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .photo_upload_actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .photo_upload_btn {
   padding: 9px 16px;
   border: none;
@@ -184,6 +205,7 @@
   text-align: center;
   transition: background var(--ease);
 }
+
 .photo_upload_btn:hover {
   background: var(--primary-dark);
 }
@@ -208,6 +230,7 @@
   text-align: center;
   transition: background var(--ease);
 }
+
 .photo_reset_btn:hover {
   background: var(--primary);
   color: #fff;
@@ -228,11 +251,24 @@
   font-weight: 600;
   color: #16a34a;
 }
+
 .check_fail {
   margin-top: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #dc2626;
+  color: #ef4444;
+}
+
+/* 비밀번호 변경 - 새 비밀번호 일치 */
+.match_ok {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.warning_hint {
+  color: #ef4444;
 }
 
 /* 반응형 */
