@@ -123,6 +123,112 @@ public class WriteService {
         return WriteResponse.from(write, nickname, profileImg);
     }
 
+    // 게시물 수정 (본인 게시물만 가능, 제목/내용/칼로리 + 사진 추가·삭제)
+    // existingImageUrls: 그대로 유지할 기존 사진들의 URL (남길 순서대로)
+    // newImages: 새로 첨부한 사진 파일들 (existingImageUrls 뒤에 이어 붙임)
+    public WriteResponse updateWrite(Long userId, Long writeId, String title, String content,
+                                     Integer calories, List<String> existingImageUrls,
+                                     List<MultipartFile> newImages) {
+
+        Write write = writeDao.findById(writeId)
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+
+        if (!write.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인이 작성한 게시물만 수정할 수 있습니다.");
+        }
+
+        if (title == null || title.trim().isEmpty() || title.trim().length() > TITLE_MAX) {
+            throw new IllegalArgumentException("제목은 1~" + TITLE_MAX + "자로 입력해주세요.");
+        }
+
+        if (content != null && content.length() > CONTENT_MAX) {
+            throw new IllegalArgumentException("내용은 최대 " + CONTENT_MAX + "자까지 입력할 수 있습니다.");
+        }
+
+        if (calories == null || calories < 0 || calories > 9999) {
+            throw new IllegalArgumentException("칼로리는 0~9999 사이로 입력해주세요.");
+        }
+
+        List<String> keepUrls = (existingImageUrls == null) ? List.of() :
+                existingImageUrls.stream().filter(u -> u != null && !u.isBlank()).toList();
+
+        List<MultipartFile> validNewImages = (newImages == null) ? List.of() :
+                newImages.stream().filter(f -> f != null && !f.isEmpty()).toList();
+
+        int totalCount = keepUrls.size() + validNewImages.size();
+        if (totalCount == 0) {
+            throw new IllegalArgumentException("사진을 1장 이상 첨부해주세요.");
+        }
+        if (totalCount > MAX_IMAGES) {
+            throw new IllegalArgumentException("사진은 최대 " + MAX_IMAGES + "장까지 첨부할 수 있습니다.");
+        }
+
+        for (MultipartFile file : validNewImages) {
+            if (!ALLOWED_IMAGE_TYPES.contains(file.getContentType())) {
+                throw new IllegalArgumentException("JPG·JPEG·PNG·WEBP 형식의 이미지만 첨부할 수 있습니다.");
+            }
+            if (file.getSize() > MAX_IMAGE_SIZE) {
+                throw new IllegalArgumentException("이미지는 장당 10MB까지 첨부할 수 있습니다.");
+            }
+        }
+
+        // 더 이상 유지하지 않는 기존 사진은 디스크에서도 함께 삭제
+        for (WriteImage img : write.getImages()) {
+            if (!keepUrls.contains(img.getImageUrl())) {
+                deleteImageFile(img.getImageUrl());
+            }
+        }
+
+        // 기존 목록을 비우고 "유지할 기존 사진 + 새로 올린 사진" 순서로 다시 구성
+        // (orphanRemoval=true라서 비워진 만큼 기존 WriteImage row는 자동으로 삭제됨)
+        write.getImages().clear();
+
+        int order = 0;
+        for (String url : keepUrls) {
+            WriteImage img = new WriteImage();
+            img.setWrite(write);
+            img.setImageUrl(url);
+            img.setSortOrder(order++);
+            write.getImages().add(img);
+        }
+        for (MultipartFile file : validNewImages) {
+            WriteImage img = new WriteImage();
+            img.setWrite(write);
+            img.setImageUrl(saveImage(userId, file));
+            img.setSortOrder(order++);
+            write.getImages().add(img);
+        }
+
+        write.setTitle(title.trim());
+        write.setContent((content == null || content.trim().isEmpty()) ? null : content.trim());
+        write.setCalories(calories);
+
+        Write saved = writeDao.save(write);
+
+        User author = userDao.findById(userId).orElse(null);
+        String nickname = (author != null) ? author.getNickname() : "알수없음";
+        String profileImg = (author != null) ? author.getProfileImg() : null;
+
+        return WriteResponse.from(saved, nickname, profileImg);
+    }
+
+    // 게시물 삭제 (본인 게시물만 가능, 연결된 이미지 파일도 디스크에서 함께 제거)
+    public void deleteWrite(Long userId, Long writeId) {
+        Write write = writeDao.findById(writeId)
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+
+        if (!write.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인이 작성한 게시물만 삭제할 수 있습니다.");
+        }
+
+        for (WriteImage img : write.getImages()) {
+            deleteImageFile(img.getImageUrl());
+        }
+
+        // cascade=ALL, orphanRemoval=true 설정으로 WriteImage row들도 함께 삭제됨
+        writeDao.delete(write);
+    }
+
     // Write 목록을 WriteResponse 목록으로 변환하면서, 작성자 닉네임/프로필 사진을 한 번에 조회해 채워줌
     // (게시물마다 매번 조회하지 않도록 userId를 모아서 한 번만 조회)
     private List<WriteResponse> toResponses(List<Write> writes) {
@@ -164,6 +270,17 @@ public class WriteService {
             return baseUrl + uploadUrlPrefix + "/" + filename;
         } catch (IOException e) {
             throw new IllegalArgumentException("이미지 저장에 실패했습니다.");
+        }
+    }
+
+    // 이미지 URL에서 실제 파일명을 추출해 디스크에서 삭제 (게시물 수정/삭제 시 사용)
+    // 파일이 이미 없거나 삭제에 실패해도 게시물 수정/삭제 자체를 막지는 않음
+    private void deleteImageFile(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+        try {
+            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            Files.deleteIfExists(Paths.get(uploadDir, filename));
+        } catch (IOException ignored) {
         }
     }
 }

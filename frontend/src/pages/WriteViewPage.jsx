@@ -21,7 +21,7 @@ const formatDateTime = (isoString) => {
 const WriteViewPage = () => {
   const { writeId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +63,39 @@ const WriteViewPage = () => {
   const goPrev = () => setActiveImg((i) => Math.max(0, i - 1));
   const goNext = () => setActiveImg((i) => Math.min(images.length - 1, i + 1));
 
+  // 게시물 삭제 - 확인 팝업 후 실제 백엔드(/writes/{id}) 삭제 요청, 성공 시 피드로 이동
+  const handleDelete = () => {
+    Swal.fire({
+      title: "정말 삭제하시겠습니까?",
+      text: "삭제한 게시물은 복구할 수 없습니다.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      confirmButtonColor: "#ef4444",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      axios
+        .delete(`${import.meta.env.VITE_BACKSERVER}/writes/${writeId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(() => {
+          Swal.fire({
+            title: "삭제되었습니다",
+            icon: "success",
+          }).then(() => navigate("/"));
+        })
+        .catch((err) => {
+          Swal.fire({
+            title: "삭제에 실패했습니다",
+            text: err.response?.data || "잠시 후 다시 시도해주세요.",
+            icon: "error",
+          });
+        });
+    });
+  };
+
   return (
     <div className={`page ${styles.view_page}`}>
       <div className="wrap">
@@ -77,12 +110,17 @@ const WriteViewPage = () => {
             </button>
             {isAuthor && (
               <div className={styles.owner_actions}>
-                <button type="button" className="btn btn-ghost btn-sm">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => navigate(`/mealplan/write-modify/${writeId}`)}
+                >
                   수정
                 </button>
                 <button
                   type="button"
                   className={`btn btn-sm ${styles.btn_delete}`}
+                  onClick={handleDelete}
                 >
                   삭제
                 </button>

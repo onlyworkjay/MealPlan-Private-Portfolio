@@ -73,4 +73,49 @@ public class WriteController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // 게시물 수정 (본인 게시물만 가능, 제목/내용/칼로리 + 사진 추가·삭제)
+    // existingImageUrls: 그대로 유지할 기존 사진 URL 목록, images: 새로 추가한 사진 파일 목록
+    @PostMapping("/{writeId}")
+    public ResponseEntity<?> updateWrite(
+            @PathVariable Long writeId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String title,
+            @RequestParam(required = false) String content,
+            @RequestParam Integer calories,
+            @RequestParam(required = false) List<String> existingImageUrls,
+            @RequestParam(required = false) List<MultipartFile> images) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            Long userId = jwtUtil.getUserId(token);
+
+            WriteResponse response = writeService.updateWrite(
+                    userId, writeId, title, content, calories, existingImageUrls, images);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("인증에 실패했습니다. 다시 로그인해주세요.");
+        }
+    }
+
+    // 게시물 삭제 (본인 게시물만 가능, 연결된 이미지 파일도 디스크에서 함께 제거)
+    @DeleteMapping("/{writeId}")
+    public ResponseEntity<?> deleteWrite(
+            @PathVariable Long writeId,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            Long userId = jwtUtil.getUserId(token);
+
+            writeService.deleteWrite(userId, writeId);
+
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("인증에 실패했습니다. 다시 로그인해주세요.");
+        }
+    }
 }

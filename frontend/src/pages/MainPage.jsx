@@ -28,11 +28,21 @@ const formatDateTime = (isoString) => {
   return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
 };
 
+// 날짜를 "YYYY-MM-DD" 형식으로 변환 (캘린더 셀 키와 맞추기 위한 용도)
+const toDateKey = (isoString) => {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 // 기본 썸네일 (사진이 없는 경우를 위한 안전장치 - 등록 시 사진 1장 이상 필수라 실제로는 거의 발생하지 않음)
 const FALLBACK_THUMB =
   "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80";
 
-function MiniCalendar({ onDateSelect }) {
+function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -40,7 +50,6 @@ function MiniCalendar({ onDateSelect }) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
-  const HAS_RECORD = [3, 5, 7, 10, 11, 14, 17, 18, 21];
 
   const prevMonth = () =>
     month === 0
@@ -74,45 +83,49 @@ function MiniCalendar({ onDateSelect }) {
             {d}
           </div>
         ))}
-        {cells.map((d, i) => (
-          <div
-            key={i}
-            className={[
-              styles.miniCalDay,
-              d === null ? styles.otherMonth : "",
-              d === today.getDate() &&
-              month === today.getMonth() &&
-              year === today.getFullYear()
-                ? styles.today
-                : "",
-              d && HAS_RECORD.includes(d) ? styles.hasRecord : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onClick={() =>
-              d &&
-              onDateSelect(
-                `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
-              )
-            }
-          >
-            {d ?? ""}
-          </div>
-        ))}
+        {cells.map((d, i) => {
+          const dateKey = d
+            ? `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
+            : null;
+          return (
+            <div
+              key={i}
+              className={[
+                styles.miniCalDay,
+                d === null ? styles.otherMonth : "",
+                d === today.getDate() &&
+                month === today.getMonth() &&
+                year === today.getFullYear()
+                  ? styles.today
+                  : "",
+                dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => dateKey && onDateSelect(dateKey)}
+            >
+              {d ?? ""}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 const MainPage = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
+  const [sortOrder, setSortOrder] = useState("latest"); // "latest" | "oldest", 기본값 최신순
 
-  // ⬇️ 수정된 부분: MOCK_POSTS 대신 실제 백엔드(/writes)에서 전체 피드를 불러옴
+  // 백엔드(/writes)에서 전체 피드 불러옴
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // 캘린더 점 표시용 - 다른 사람 글이 아닌, 로그인한 내가 작성한 게시물의 날짜만 모음
+  const [myDates, setMyDates] = useState(new Set());
 
   useEffect(() => {
     axios
@@ -120,8 +133,9 @@ const MainPage = () => {
       .then((res) => {
         const mapped = res.data.map((w) => ({
           id: w.writeId,
-          user: w.nickname ?? "알수없음",
+          user: w.nickname ?? "알 수 없음",
           profileImg: w.profileImg || null,
+          createdAt: w.createdAt,
           dateOnly: formatDate(w.createdAt),
           dateTime: formatDateTime(w.createdAt),
           title: w.title,
@@ -138,6 +152,26 @@ const MainPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // 캘린더에 표시할 점은 "내가 올린 기록"만 반영 - /writes/my를 그대로 재사용
+  // 로그아웃 상태이거나 token이 아직 준비되지 않았으면 그냥 빈 상태로 둠
+  useEffect(() => {
+    if (!isLoggedIn || !token) {
+      setMyDates(new Set());
+      return;
+    }
+
+    axios
+      .get(`${import.meta.env.VITE_BACKSERVER}/writes/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setMyDates(new Set(res.data.map((w) => toDateKey(w.createdAt))));
+      })
+      .catch(() => {
+        setMyDates(new Set());
+      });
+  }, [isLoggedIn, token]);
+
   const filtered = posts.filter(
     (p) =>
       (!search ||
@@ -146,7 +180,12 @@ const MainPage = () => {
       (!selectedDate || p.dateOnly === selectedDate.replace(/-/g, ".")),
   );
 
-  // === 오늘의 통계 계산 ===
+  const sorted = [...filtered].sort((a, b) => {
+    const diff = new Date(a.createdAt) - new Date(b.createdAt);
+    return sortOrder === "latest" ? -diff : diff;
+  });
+
+  // 오늘의 통계 계산
   const totalPosts = posts.length;
 
   const avgCalories =
@@ -247,6 +286,14 @@ const MainPage = () => {
                   </button>
                 )}
               </div>
+              <select
+                className={styles.sortSelect}
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="latest">최신순</option>
+                <option value="oldest">오래된순</option>
+              </select>
               {selectedDate && (
                 <button
                   className={styles.filterDate}
@@ -268,7 +315,7 @@ const MainPage = () => {
               <div className={styles.postsEmpty}>
                 <div className={styles.postsEmptyTitle}>불러오는 중...</div>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <div className={styles.postsEmpty}>
                 <div className={styles.postsEmptyIcon}>🔍</div>
                 <div className={styles.postsEmptyTitle}>
@@ -284,7 +331,7 @@ const MainPage = () => {
               </div>
             ) : (
               <div className={styles.postsGrid}>
-                {filtered.map((post) => (
+                {sorted.map((post) => (
                   <div
                     className={styles.postCard}
                     key={post.id}
@@ -323,7 +370,10 @@ const MainPage = () => {
           <aside className={styles.sidebar}>
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📅 날짜별 보기</div>
-              <MiniCalendar onDateSelect={setSelectedDate} />
+              <MiniCalendar
+                onDateSelect={setSelectedDate}
+                recordDates={myDates}
+              />
             </div>
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📊 오늘의 통계</div>

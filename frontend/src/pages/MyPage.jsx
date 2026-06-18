@@ -63,12 +63,8 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
 
-  // 내 게시물 탭으로 들어올 때마다 최신 목록을 다시 불러옴 (방금 등록한 글도 바로 보이도록)
-  // token이 아직 로딩되지 않은 시점(null/undefined)에는 요청을 보내지 않음
-  // (보내면 인증 없이 나가서 401이 뜨고, 곧이어 token이 채워지면 다시 정상 호출되는 식으로 두 번 실행됨)
-  useEffect(() => {
-    if (tab !== "posts" || !token) return;
-
+  // 내 게시물 목록을 불러오는 함수 (탭 진입 시, 그리고 삭제 후 갱신할 때도 재사용)
+  const fetchMyPosts = () => {
     setMyPostsLoading(true);
     axios
       .get(`${import.meta.env.VITE_BACKSERVER}/writes/my`, {
@@ -92,7 +88,52 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         });
       })
       .finally(() => setMyPostsLoading(false));
+  };
+
+  // 내 게시물 탭으로 들어올 때마다 최신 목록을 다시 불러옴 (방금 등록한 글도 바로 보이도록)
+  // token이 아직 로딩되지 않은 시점(null/undefined)에는 요청을 보내지 않음
+  // (보내면 인증 없이 나가서 401이 뜨고, 곧이어 token이 채워지면 다시 정상 호출되는 식으로 두 번 실행됨)
+  useEffect(() => {
+    if (tab !== "posts" || !token) return;
+    fetchMyPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, token]);
+
+  // 게시물 삭제 - 확인 팝업 후 실제 백엔드(/writes/{id}) 삭제 요청, 성공 시 목록에서 바로 제거
+  const handleDeletePost = (id) => {
+    Swal.fire({
+      title: "정말 삭제하시겠습니까?",
+      text: "삭제한 게시물은 복구할 수 없습니다.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      confirmButtonColor: "#ef4444",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      axios
+        .delete(`${import.meta.env.VITE_BACKSERVER}/writes/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(() => {
+          setMyPosts((prev) => prev.filter((p) => p.id !== id));
+          Swal.fire({
+            icon: "success",
+            title: "삭제되었습니다",
+            confirmButtonColor: "#38BDF8",
+          });
+        })
+        .catch((err) => {
+          Swal.fire({
+            icon: "error",
+            title: "삭제에 실패했습니다",
+            text: err.response?.data || "잠시 후 다시 시도해주세요.",
+            confirmButtonColor: "#38BDF8",
+          });
+        });
+    });
+  };
 
   // 엔터 키 입력 시 지정한 동작 실행 (비밀번호 입력칸에서 버튼 안 눌러도 넘어가게)
   const handleEnterKey = (e, callback) => {
@@ -425,8 +466,18 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                           >
                             상세보기
                           </button>
-                          <button className="btn btn-ghost btn-sm">수정</button>
-                          <button className={`btn btn-sm ${styles.btn_delete}`}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() =>
+                              onNavigate(`mealplan/write-modify/${p.id}`)
+                            }
+                          >
+                            수정
+                          </button>
+                          <button
+                            className={`btn btn-sm ${styles.btn_delete}`}
+                            onClick={() => handleDeletePost(p.id)}
+                          >
                             삭제
                           </button>
                         </div>
