@@ -381,8 +381,13 @@ export default function MyPage({ user, onLogout, onNavigate }) {
               <div className={styles.profile_name}>
                 {user?.nickname ?? "사용자"}
               </div>
-              <div className={styles.profile_email}>
-                {user?.email ?? "이메일 미등록"}
+              <div className={styles.profile_meta}>
+                아이디: {user?.loginId ?? "-"}
+              </div>
+              <div className={styles.profile_meta}>
+                {user?.email
+                  ? `이메일: ${user.email}`
+                  : "등록된 이메일이 없습니다."}
               </div>
             </div>
             <nav className={styles.mypage_menu}>
