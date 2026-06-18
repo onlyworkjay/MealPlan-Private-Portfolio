@@ -10,6 +10,7 @@ import JoinPage from "./pages/JoinPage";
 import FindIdPage from "./pages/FindIdPage";
 import FindPwPage from "./pages/FindPwPage";
 import MyPage from "./pages/MyPage";
+import WritePage from "./pages/WritePage";
 import ScrollToTop from "./components/ScrollToTop";
 import ResetPwPage from "./pages/ResetPwPage";
 
@@ -37,6 +38,10 @@ function AppContent() {
         <Route path="/users/find-id" element={<FindIdPage />} />
         <Route path="/users/find-pw" element={<FindPwPage />} />
         <Route path="/users/reset-password" element={<ResetPwPage />} />
+        <Route
+          path="/mealplan/write"
+          element={<WritePage onNavigate={handleNavigate} />}
+        />
         <Route
           path="/mypage"
           element={
