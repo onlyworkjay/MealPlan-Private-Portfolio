@@ -11,6 +11,7 @@ import FindIdPage from "./pages/FindIdPage";
 import FindPwPage from "./pages/FindPwPage";
 import MyPage from "./pages/MyPage";
 import WritePage from "./pages/WritePage";
+import WriteViewPage from "./pages/WriteViewPage";
 import ScrollToTop from "./components/ScrollToTop";
 import ResetPwPage from "./pages/ResetPwPage";
 
@@ -41,6 +42,10 @@ function AppContent() {
         <Route
           path="/mealplan/write"
           element={<WritePage onNavigate={handleNavigate} />}
+        />
+        <Route
+          path="/mealplan/write-view/:writeId"
+          element={<WriteViewPage />}
         />
         <Route
           path="/mypage"

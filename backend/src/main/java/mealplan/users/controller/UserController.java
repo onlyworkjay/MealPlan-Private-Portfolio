@@ -75,7 +75,7 @@ public class UserController {
         }
     }
 
-    // 아이디 찾기
+    // 아이디 찾기 - 닉네임 + 이메일 확인 후 아이디와 회원가입일 제공
     @PostMapping("/find-id")
     public ResponseEntity<?> findId(@RequestBody FindIdRequest request) {
         try {
@@ -90,7 +90,7 @@ public class UserController {
         }
     }
 
-    // 비밀번호 찾기 - 아이디 + 이메일 확인 후 새 비밀번호로 직접 변경
+    // 비밀번호 찾기 - 아이디 + 이메일 확인 후 새 비밀번호로 직접 변경 (창으로 이동)
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPwRequest request) {
         try {

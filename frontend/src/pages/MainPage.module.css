@@ -282,6 +282,15 @@
   font-weight: 700;
   flex-shrink: 0;
 }
+.postAvatarImg {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
 .postUsername {
   font-size: 13px;
   font-weight: 600;

@@ -1,19 +1,24 @@
 import { useState } from "react";
 import styles from "./WritePage.module.css";
 import Swal from "sweetalert2";
+import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
-// 제목/내용 최대 길이 50자/1,000자
 const TITLE_MAX = 50;
 const CONTENT_MAX = 1000;
 
 export default function WritePage({ onNavigate }) {
+  const { token } = useAuth();
+
+  // images: 미리보기용 URL, imageFiles: 실제 업로드할 File 객체 (같은 인덱스로 매칭)
   const [images, setImages] = useState([null, null, null, null]);
+  const [imageFiles, setImageFiles] = useState([null, null, null, null]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [calories, setCalories] = useState("");
   const hasImage = images.some((i) => i !== null);
 
-  // 허용된 이미지 형식이 아니면 SWAL 출력 및 미첨부
+  // 허용된 이미지 형식이 아니면 Swal 경고를 띄우고 첨부하지 않음
   const ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
     "image/jpg",
@@ -41,13 +46,24 @@ export default function WritePage({ onNavigate }) {
       n[idx] = url;
       return n;
     });
+    setImageFiles((prev) => {
+      const n = [...prev];
+      n[idx] = file;
+      return n;
+    });
   };
-  const removeImg = (idx) =>
+  const removeImg = (idx) => {
     setImages((prev) => {
       const n = [...prev];
       n[idx] = null;
       return n;
     });
+    setImageFiles((prev) => {
+      const n = [...prev];
+      n[idx] = null;
+      return n;
+    });
+  };
 
   // 제목 글자 수 제한 - 초과 시 Swal 경고 후 최대 길이로 잘라냄
   const handleTitleChange = (e) => {
@@ -79,18 +95,50 @@ export default function WritePage({ onNavigate }) {
     setContent(value);
   };
 
+  // ⬇️ 수정된 부분: alert()만 띄우던 목업을 실제 백엔드(/writes) 등록 요청으로 교체
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!hasImage) {
-      alert("사진을 1장 이상 첨부해주세요.");
+      Swal.fire({ title: "사진을 1장 이상 첨부해주세요.", icon: "warning" });
+      return;
+    }
+    if (!title.trim()) {
+      Swal.fire({ title: "제목을 입력해주세요.", icon: "warning" });
       return;
     }
     if (!calories) {
-      alert("칼로리를 입력해주세요.");
+      Swal.fire({ title: "칼로리를 입력해주세요.", icon: "warning" });
       return;
     }
-    alert("게시물이 등록되었습니다!");
-    onNavigate("feed");
+
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    if (content.trim()) formData.append("content", content.trim());
+    formData.append("calories", calories);
+    imageFiles.forEach((file) => {
+      if (file) formData.append("images", file);
+    });
+
+    axios
+      .post(`${import.meta.env.VITE_BACKSERVER}/writes`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        Swal.fire({
+          title: "게시물이 등록되었습니다!",
+          icon: "success",
+        }).then(() => {
+          onNavigate("feed");
+        });
+      })
+      .catch((err) => {
+        Swal.fire({
+          title: "등록에 실패했습니다",
+          text: err.response?.data || "잠시 후 다시 시도해주세요.",
+          icon: "error",
+        });
+      });
   };
 
   return (
@@ -115,7 +163,8 @@ export default function WritePage({ onNavigate }) {
               <label className="form-label">
                 사진 <span className="required">*</span>
                 <span className={styles.char_count}>
-                  최대 4장 / JPG·JPEG·PNG·WEBP / 장당 10MB
+                  최대 4장 / JPG·JPEG·PNG·WEBP 형식만 가능 / 장당 최대 10MB까지
+                  가능
                 </span>
               </label>
               <div className={styles.img_upload_grid}>

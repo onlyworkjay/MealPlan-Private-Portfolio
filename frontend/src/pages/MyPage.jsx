@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import styles from "./MyPage.module.css";
@@ -15,30 +15,26 @@ const MENU = [
   { key: "password", label: "비밀번호 변경" },
   { key: "withdraw", label: "회원 탈퇴" },
 ];
-const MOCK_MY_POSTS = [
-  {
-    id: 1,
-    title: "오늘 점심 닭가슴살 샐러드",
-    date: "2025.06.11",
-    calories: 420,
-  },
-  {
-    id: 2,
-    title: "단백질 스무디 아침 루틴",
-    date: "2025.06.10",
-    calories: 290,
-  },
-  {
-    id: 3,
-    title: "저녁은 가볍게 그릭 요거트",
-    date: "2025.06.09",
-    calories: 180,
-  },
-];
+
+// 날짜+시간을 "YYYY.MM.DD HH:MM" 형식으로 표시 (초는 표시 안 함)
+const formatDateTime = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
+};
 
 export default function MyPage({ user, onLogout, onNavigate }) {
   const { token, updateUser } = useAuth();
   const [tab, setTab] = useState("posts");
+
+  // ⬇️ 수정된 부분: MOCK_MY_POSTS 대신 실제 백엔드(/writes/my)에서 내 게시물을 불러옴
+  const [myPosts, setMyPosts] = useState([]);
+  const [myPostsLoading, setMyPostsLoading] = useState(false);
 
   // 프로필 사진
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -66,6 +62,37 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [withdrawStep, setWithdrawStep] = useState(1);
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
+
+  // 내 게시물 탭으로 들어올 때마다 최신 목록을 다시 불러옴 (방금 등록한 글도 바로 보이도록)
+  // token이 아직 로딩되지 않은 시점(null/undefined)에는 요청을 보내지 않음
+  // (보내면 인증 없이 나가서 401이 뜨고, 곧이어 token이 채워지면 다시 정상 호출되는 식으로 두 번 실행됨)
+  useEffect(() => {
+    if (tab !== "posts" || !token) return;
+
+    setMyPostsLoading(true);
+    axios
+      .get(`${import.meta.env.VITE_BACKSERVER}/writes/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setMyPosts(
+          res.data.map((w) => ({
+            id: w.writeId,
+            title: w.title,
+            date: formatDateTime(w.createdAt),
+            calories: w.calories,
+          })),
+        );
+      })
+      .catch(() => {
+        Swal.fire({
+          icon: "error",
+          title: "게시물을 불러오지 못했습니다",
+          confirmButtonColor: "#38BDF8",
+        });
+      })
+      .finally(() => setMyPostsLoading(false));
+  }, [tab, token]);
 
   // 엔터 키 입력 시 지정한 동작 실행 (비밀번호 입력칸에서 버튼 안 눌러도 넘어가게)
   const handleEnterKey = (e, callback) => {
@@ -274,8 +301,6 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       });
   };
 
-  // ⬇️ 추가된 부분: 실제로 서버에 탈퇴 요청을 보내고, 성공하면 안내 후 로그아웃 처리
-  // (백엔드에 /users/withdraw 엔드포인트 추가가 필요합니다)
   const handleWithdraw = () => {
     axios
       .post(
@@ -374,25 +399,41 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   <h1>내 게시물</h1>
                   <p>내가 작성한 식단 기록 모아보기</p>
                 </div>
-                <div className={styles.my_posts_list}>
-                  {MOCK_MY_POSTS.map((p) => (
-                    <div className={styles.my_post_item} key={p.id}>
-                      <div>
-                        <div className={styles.my_post_title}>{p.title}</div>
-                        <div className={styles.my_post_date}>{p.date}</div>
+                {myPostsLoading ? (
+                  <div className={styles.my_posts_list}>불러오는 중...</div>
+                ) : myPosts.length === 0 ? (
+                  <div className={styles.my_posts_list}>
+                    아직 작성한 식단 기록이 없습니다.
+                  </div>
+                ) : (
+                  <div className={styles.my_posts_list}>
+                    {myPosts.map((p) => (
+                      <div className={styles.my_post_item} key={p.id}>
+                        <div>
+                          <div className={styles.my_post_title}>{p.title}</div>
+                          <div className={styles.my_post_date}>{p.date}</div>
+                        </div>
+                        <div className={styles.my_post_right}>
+                          <span className={styles.my_post_cal}>
+                            🔥 {p.calories} kcal
+                          </span>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() =>
+                              onNavigate(`mealplan/write-view/${p.id}`)
+                            }
+                          >
+                            상세보기
+                          </button>
+                          <button className="btn btn-ghost btn-sm">수정</button>
+                          <button className={`btn btn-sm ${styles.btn_delete}`}>
+                            삭제
+                          </button>
+                        </div>
                       </div>
-                      <div className={styles.my_post_right}>
-                        <span className={styles.my_post_cal}>
-                          🔥 {p.calories} kcal
-                        </span>
-                        <button className="btn btn-ghost btn-sm">수정</button>
-                        <button className={`btn btn-sm ${styles.btn_delete}`}>
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
 

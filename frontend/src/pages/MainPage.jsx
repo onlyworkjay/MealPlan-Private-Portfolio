@@ -1,59 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "./MainPage.module.css";
 import logo from "../assets/logo.svg";
+import defaultProfile from "../assets/default-profile.svg";
 import { useAuth } from "../contexts/AuthContext";
 
-const MOCK_POSTS = [
-  {
-    id: 1,
-    user: "김건강",
-    avatar: "김",
-    date: "2025.06.11",
-    title: "오늘 점심 닭가슴살 샐러드",
-    content: "다이어트 4주차. 칼로리 줄이면서도 든든하게 먹는 게 목표!",
-    calories: 420,
-    images: 2,
-    thumb:
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80",
-  },
-  {
-    id: 2,
-    user: "박헬스",
-    avatar: "박",
-    date: "2025.06.11",
-    title: "벌크업 식단 Day 21",
-    content: "고단백 저지방으로 구성. 오늘은 현미밥 + 소고기 + 계란 3개",
-    calories: 850,
-    images: 4,
-    thumb:
-      "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
-  },
-  {
-    id: 3,
-    user: "이다이어트",
-    avatar: "이",
-    date: "2025.06.10",
-    title: "저녁은 가볍게 그릭 요거트",
-    content: "야식 참기 성공! 그릭 요거트 + 블루베리로 깔끔하게 마무리",
-    calories: 180,
-    images: 1,
-    thumb:
-      "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80",
-  },
-  {
-    id: 4,
-    user: "최운동",
-    avatar: "최",
-    date: "2025.06.10",
-    title: "운동 전 탄수화물 보충",
-    content: "바나나 + 오트밀로 에너지 충전. 오늘 데드리프트 PR 갱신!",
-    calories: 320,
-    images: 3,
-    thumb:
-      "https://images.unsplash.com/photo-1571748982800-fa51082c2224?w=400&q=80",
-  },
-];
+// 날짜를 "YYYY.MM.DD" 형식으로 표시 (검색/통계용 - 날짜만 비교)
+const formatDate = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}.${mm}.${dd}`;
+};
+
+// 날짜+시간을 "YYYY.MM.DD HH:MM" 형식으로 표시 (카드에 보여줄 때 사용, 초는 표시 안 함)
+const formatDateTime = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
+};
+
+// 기본 썸네일 (사진이 없는 경우를 위한 안전장치 - 등록 시 사진 1장 이상 필수라 실제로는 거의 발생하지 않음)
+const FALLBACK_THUMB =
+  "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80";
 
 function MiniCalendar({ onDateSelect }) {
   const today = new Date();
@@ -133,28 +110,56 @@ const MainPage = () => {
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
 
-  const filtered = MOCK_POSTS.filter(
+  // ⬇️ 수정된 부분: MOCK_POSTS 대신 실제 백엔드(/writes)에서 전체 피드를 불러옴
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_BACKSERVER}/writes`)
+      .then((res) => {
+        const mapped = res.data.map((w) => ({
+          id: w.writeId,
+          user: w.nickname ?? "알수없음",
+          profileImg: w.profileImg || null,
+          dateOnly: formatDate(w.createdAt),
+          dateTime: formatDateTime(w.createdAt),
+          title: w.title,
+          content: w.content ?? "",
+          calories: w.calories,
+          images: w.imageUrls?.length ?? 0,
+          thumb: w.imageUrls?.[0] ?? FALLBACK_THUMB,
+        }));
+        setPosts(mapped);
+      })
+      .catch(() => {
+        setPosts([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = posts.filter(
     (p) =>
-      (!search || p.title.includes(search) || p.content.includes(search)) &&
-      (!selectedDate || p.date === selectedDate.replace(/-/g, ".")),
+      (!search ||
+        p.title.includes(search) ||
+        (p.content || "").includes(search)) &&
+      (!selectedDate || p.dateOnly === selectedDate.replace(/-/g, ".")),
   );
 
   // === 오늘의 통계 계산 ===
-  const totalPosts = MOCK_POSTS.length;
+  const totalPosts = posts.length;
 
   const avgCalories =
     totalPosts === 0
       ? 0
-      : Math.round(
-          MOCK_POSTS.reduce((sum, p) => sum + p.calories, 0) / totalPosts,
-        );
+      : Math.round(posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts);
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}.${String(
     today.getMonth() + 1,
   ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
 
-  const todayCount = MOCK_POSTS.filter((p) => p.date === todayStr).length;
+  const todayCount = posts.filter((p) => p.dateOnly === todayStr).length;
 
   return (
     <div className={styles.page}>
@@ -259,12 +264,22 @@ const MainPage = () => {
                 </button>
               )}
             </div>
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className={styles.postsEmpty}>
+                <div className={styles.postsEmptyTitle}>불러오는 중...</div>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className={styles.postsEmpty}>
                 <div className={styles.postsEmptyIcon}>🔍</div>
-                <div className={styles.postsEmptyTitle}>검색 결과가 없어요</div>
+                <div className={styles.postsEmptyTitle}>
+                  {posts.length === 0
+                    ? "아직 등록된 식단 기록이 없어요"
+                    : "검색 결과가 없어요"}
+                </div>
                 <div className={styles.postsEmptySub}>
-                  다른 키워드로 검색해 보세요
+                  {posts.length === 0
+                    ? "가장 먼저 식단을 기록해보세요"
+                    : "다른 키워드로 검색해 보세요"}
                 </div>
               </div>
             ) : (
@@ -273,7 +288,7 @@ const MainPage = () => {
                   <div
                     className={styles.postCard}
                     key={post.id}
-                    onClick={() => navigate("/mealplan/post-detail")}
+                    onClick={() => navigate(`/mealplan/write-view/${post.id}`)}
                   >
                     <div className={styles.postImgWrap}>
                       <img src={post.thumb} alt={post.title} loading="lazy" />
@@ -288,9 +303,13 @@ const MainPage = () => {
                     </div>
                     <div className={styles.postBody}>
                       <div className={styles.postUser}>
-                        <div className={styles.postAvatar}>{post.avatar}</div>
+                        <img
+                          className={styles.postAvatarImg}
+                          src={post.profileImg || defaultProfile}
+                          alt={post.user}
+                        />
                         <span className={styles.postUsername}>{post.user}</span>
-                        <span className={styles.postDate}>{post.date}</span>
+                        <span className={styles.postDate}>{post.dateTime}</span>
                       </div>
                       <div className={styles.postTitle}>{post.title}</div>
                       <div className={styles.postContent}>{post.content}</div>
