@@ -1,9 +1,6 @@
 package mealplan.users.controller;
 
-import mealplan.users.dto.JoinRequest;
-import mealplan.users.dto.LoginRequest;
-import mealplan.users.dto.LoginResponse;
-import mealplan.users.dto.UserResponse;
+import mealplan.users.dto.*;
 import mealplan.users.service.UserService;
 import mealplan.users.vo.User;
 import mealplan.users.util.JwtUtil;
@@ -78,6 +75,33 @@ public class UserController {
         }
     }
 
+    // 아이디 찾기
+    @PostMapping("/find-id")
+    public ResponseEntity<?> findId(@RequestBody FindIdRequest request) {
+        try {
+            User user = userService.findAccountByNicknameAndEmail(
+                    request.getNickname(), request.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "loginId", user.getLoginId(),
+                    "createdAt", user.getCreatedAt()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 비밀번호 찾기 - 아이디 + 이메일 확인 후 새 비밀번호로 직접 변경
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPwRequest request) {
+        try {
+            userService.resetPassword(
+                    request.getLoginId(), request.getEmail(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // 마이페이지 - 내 정보 수정 (닉네임 / 이메일 / 프로필 사진)
     @PostMapping("/profile")
     public ResponseEntity<?> updateProfile(
@@ -96,6 +120,39 @@ public class UserController {
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("인증에 실패했습니다. 다시 로그인해주세요.");
+        }
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<?> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody ChangePasswordRequest request) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            Long userId = jwtUtil.getUserId(token);
+
+            userService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("인증에 실패했습니다. 다시 로그인해주세요.");
+        }
+    }
+
+    // 마이페이지 - 회원 탈퇴
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdraw(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            Long userId = jwtUtil.getUserId(token);
+
+            userService.withdraw(userId);
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(401).body("인증에 실패했습니다. 다시 로그인해주세요.");
         }

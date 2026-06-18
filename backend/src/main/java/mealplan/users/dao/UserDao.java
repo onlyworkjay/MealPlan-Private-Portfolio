@@ -19,4 +19,9 @@ public interface UserDao extends JpaRepository<User, Long> {
     // 로그인 시 아이디로 회원 조회
     Optional<User> findByLoginId(String loginId);
 
+    // 아이디 찾기용 - 닉네임 + 이메일로 회원 조회
+    Optional<User> findByNicknameAndEmail(String nickname, String email);
+
+    // 비밀번호 찾기용 - 로그인 아이디 + 이메일로 회원 조회
+    Optional<User> findByLoginIdAndEmail(String loginId, String email);
 }

@@ -14,22 +14,36 @@ const FindIdPage = () => {
   });
   const [emailVerified, setEmailVerified] = useState(false);
 
+  // 가입일을 "YYYY.MM.DD" 형식으로 표시 (앱 내 다른 날짜 표시 형식과 통일)
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}.${mm}.${dd}`;
+  };
+
+  // ⬇️ 수정된 부분: 응답에 같이 내려오는 createdAt(가입일)도 함께 표시
   const handleFindId = async () => {
     try {
-      const res = await axios.post("/api/users/find-id", {
-        nickname: user.nickname,
-        email: user.email,
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKSERVER}/users/find-id`,
+        {
+          nickname: user.nickname,
+          email: user.email,
+        },
+      );
 
       Swal.fire({
         title: "아이디 찾기 결과",
-        text: `회원님의 아이디는 ${res.data.userId} 입니다.`,
+        html: `회원님의 아이디는 <b>${res.data.loginId}</b> 입니다.<br/>가입일: ${formatDate(res.data.createdAt)}`,
         icon: "success",
       });
     } catch (err) {
       Swal.fire({
         title: "조회 실패",
-        text: "일치하는 정보가 없습니다.",
+        text: err.response?.data || "일치하는 정보가 없습니다.",
         icon: "error",
       });
     }
@@ -80,6 +94,9 @@ const FindIdPage = () => {
               email={user.email}
               setEmail={(email) => setUser({ ...user, email: email })}
               onVerified={setEmailVerified}
+              label="이메일 인증"
+              placeholder="가입하신 이메일을 입력해주세요."
+              successMessage="이메일 인증이 완료되었습니다."
             />
           </div>
 

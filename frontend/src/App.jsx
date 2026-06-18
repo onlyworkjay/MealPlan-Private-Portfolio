@@ -11,6 +11,7 @@ import FindIdPage from "./pages/FindIdPage";
 import FindPwPage from "./pages/FindPwPage";
 import MyPage from "./pages/MyPage";
 import ScrollToTop from "./components/ScrollToTop";
+import ResetPwPage from "./pages/ResetPwPage";
 
 function AppContent() {
   const { isLoggedIn, user, logout, remainingSeconds } = useAuth();
@@ -35,6 +36,7 @@ function AppContent() {
         <Route path="/users/join" element={<JoinPage />} />
         <Route path="/users/find-id" element={<FindIdPage />} />
         <Route path="/users/find-pw" element={<FindPwPage />} />
+        <Route path="/users/reset-password" element={<ResetPwPage />} />
         <Route
           path="/mypage"
           element={

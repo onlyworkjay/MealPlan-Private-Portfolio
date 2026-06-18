@@ -2,7 +2,6 @@ import { useState } from "react";
 import styles from "./FindPwPage.module.css";
 import EmailAuth from "../emailauth/EmailAuth";
 import Swal from "sweetalert2";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.svg";
 
@@ -18,8 +17,9 @@ const FindPwPage = () => {
   // 이메일 인증 여부 확인
   const [emailVerified, setEmailVerified] = useState(false);
 
-  // 아이디와 이메일이 입력되었는지 확인 후 비밀번호 찾기 요청
-  const verifyInput = () => {
+  // ⬇️ 수정된 부분: 임시 비밀번호를 이메일로 보내는 방식 대신,
+  // 인증 완료 후 새 비밀번호를 직접 설정하는 페이지로 이동
+  const handleNext = () => {
     const trimmedLoginId = loginId.trim();
     const trimmedEmail = email.trim();
 
@@ -40,31 +40,9 @@ const FindPwPage = () => {
       return;
     }
 
-    axios
-      .post(`${import.meta.env.VITE_BACKSERVER}/users/find-pw`, {
-        loginId: trimmedLoginId,
-        email: trimmedEmail,
-      })
-      .then((res) => {
-        console.log(res.data);
-
-        Swal.fire({
-          title: "임시 비밀번호를 보냈습니다.",
-          text: "이메일을 확인해 주세요",
-          icon: "success",
-        }).then(() => {
-          navigate("/");
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-
-        Swal.fire({
-          title: "비밀번호 찾기 실패",
-          text: "아이디 또는 이메일을 다시 확인해 주세요",
-          icon: "error",
-        });
-      });
+    navigate("/users/reset-password", {
+      state: { loginId: trimmedLoginId, email: trimmedEmail },
+    });
   };
 
   return (
@@ -77,7 +55,7 @@ const FindPwPage = () => {
 
           <h1 className={styles.page_title}>비밀번호를 잊으셨나요?</h1>
           <p className={styles.page_subtitle}>
-            아이디와 이메일 인증 후 임시 비밀번호를 받을 수 있어요
+            아이디와 이메일 인증 후 새 비밀번호를 설정할 수 있어요
           </p>
         </div>
 
@@ -85,8 +63,8 @@ const FindPwPage = () => {
           <div className={styles.notice_box}>
             <strong>아이디와 이메일 인증이 필요합니다</strong>
             <p>
-              가입한 아이디와 등록된 이메일이 일치해야 비밀번호 찾기를 진행할 수
-              있습니다.
+              가입한 아이디와 등록된 이메일이 일치해야 비밀번호 재설정을 진행할
+              수 있습니다.
             </p>
           </div>
 
@@ -107,10 +85,15 @@ const FindPwPage = () => {
           </div>
 
           <div className={styles.email_area}>
+            {/* ⬇️ 수정된 부분: "이메일 변경"이 아니라 가입된 이메일로 본인 확인하는
+                용도라서 라벨/안내문구/인증 성공 문구를 이 맥락에 맞게 따로 지정 */}
             <EmailAuth
               email={email}
               setEmail={setEmail}
               onVerified={setEmailVerified}
+              label="이메일 인증"
+              placeholder="가입하신 이메일을 입력해주세요."
+              successMessage="이메일 인증이 완료되었습니다."
             />
           </div>
 
@@ -119,10 +102,10 @@ const FindPwPage = () => {
             className={`${styles.find_pw_btn} ${
               !emailVerified ? styles.disabled_btn : ""
             }`}
-            onClick={verifyInput}
+            onClick={handleNext}
             disabled={!emailVerified}
           >
-            비밀번호 찾기
+            새 비밀번호 설정하기
           </button>
 
           <div className={styles.bottom_link_area}>

@@ -51,9 +51,9 @@
 }
 
 .email_input:read-only {
-  background: rgba(255, 248, 236, 0.08);
-  color: rgba(255, 248, 236, 0.5);
-  border-color: rgba(255, 248, 236, 0.1);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-light);
+  border-color: rgba(231, 181, 106, 0.18);
   cursor: not-allowed;
 }
 

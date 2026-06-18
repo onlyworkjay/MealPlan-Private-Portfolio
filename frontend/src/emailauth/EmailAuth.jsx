@@ -9,12 +9,13 @@ const EmailAuth = ({
   setEmail,
   onVerified,
   readOnlyEmail,
-  placeholder = "이메일을 입력해주세요.",
+  label = "이메일 변경하기",
+  placeholder = "변경할 이메일을 입력해주세요.",
+  successMessage = "이메일이 변경되었습니다.",
   disableSend = false,
 }) => {
   // 2. 이메일 상태 구현, 인증 코드
   const [mailAuth, setMailAuth] = useState(0);
-  const [mailAuthCode, setMailAuthCode] = useState("null");
   const [inputAuthCode, setInputAuthCode] = useState("");
 
   // 9. 시간, 타이머 설정
@@ -77,15 +78,12 @@ const EmailAuth = ({
         console.log(res.data);
 
         setMailAuth(1);
-        // 기존 setMailAuthCode(res.data)에서 아래 형식으로 변환
-        // -> 공백처리 문제등을 해결하기 위함
-        setMailAuthCode(String(res.data).trim());
 
         // 인증 메일을 새로 보낼 때 타이머 초기화
         setTime(180);
         setTimeExpired(false);
         Swal.fire({
-          title: "이메일 인증 메일을 보남니다.",
+          title: "이메일 인증 메일을 보냈습니다.",
           text: "3분 이내에 인증메일을 확인해주세요",
           icon: "success",
         });
@@ -128,42 +126,43 @@ const EmailAuth = ({
     return `${min}:${sec}`;
   };
 
-  // 8. 비교 인증
+  // 8. 비교 인증 (서버에 직접 확인 요청 — 코드는 서버에만 저장되어 있으므로 클라이언트에서 비교하지 않음)
   const verifyAuthCode = (e) => {
     e.preventDefault();
 
     if (mailAuth === 3) return;
-    // 기존 이메일 인증 로직과 달라지는 점 --> servercode, inputcode추가
-    // --> 공백 처리와 관련하여 기능 수행하는 로직
-    const serverCode = String(mailAuthCode).trim();
+
     const inputCode = String(inputAuthCode).trim();
 
-    console.log("서버 인증번호:", serverCode, typeof serverCode);
-    console.log("입력 인증번호:", inputCode, typeof inputCode);
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKSERVER}/users/email-verification/confirm`,
+        { email, code: inputCode },
+      )
+      .then(() => {
+        setMailAuth(3);
+        onVerified(true);
 
-    if (inputAuthCode === serverCode) {
-      setMailAuth(3);
-      onVerified(true);
+        Swal.fire({
+          title: successMessage,
+          icon: "success",
+        });
+      })
+      .catch((err) => {
+        setMailAuth(1);
+        onVerified(false);
 
-      Swal.fire({
-        title: "이메일 인증이 완료되었습니다.",
-        icon: "success",
+        Swal.fire({
+          title: err.response?.data || "인증 번호가 일치하지 않습니다.",
+          icon: "warning",
+        });
       });
-    } else {
-      setMailAuth(1);
-      onVerified(false);
-
-      Swal.fire({
-        title: "인증 번호가 일치하지 않습니다.",
-        icon: "warning",
-      });
-    }
   };
 
   return (
     <>
       <div className={styles.email_input_wrap}>
-        <label htmlFor="email">이메일</label>
+        <label htmlFor="email">{label}</label>
         <div className={styles.input_item}>
           <input
             className={styles.email_input}

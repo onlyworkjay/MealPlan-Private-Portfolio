@@ -34,6 +34,7 @@ public class UserService {
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
+    // ⬇️ 수정된 부분: 하드 삭제로 바꾸면서 deletedAt 필터링이 필요 없어져 원래 방식으로 복원
     public boolean checkLoginId(String loginId) {
         return userDao.existsByLoginId(loginId);
     }
@@ -104,6 +105,7 @@ public class UserService {
     @Value("${file.base-url}")
     private String baseUrl;
 
+    // ⬇️ 수정된 부분: 행이 진짜로 삭제되므로 같은 login_id가 두 개 존재할 일이 없어 원래 조회 방식으로 복원
     public LoginResponse login(LoginRequest req) {
         User user = userDao.findByLoginId(req.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
@@ -167,6 +169,52 @@ public class UserService {
         return UserResponse.from(userDao.save(user));
     }
 
+    // 마이페이지 - 비밀번호 변경
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userDao.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (newPassword == null || !PW_PATTERN.matcher(newPassword).matches()) {
+            throw new IllegalArgumentException("비밀번호는 영문+숫자+특수문자(!@#$%) 조합 8~16자여야 합니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDao.save(user);
+    }
+
+    // 아이디 찾기 - 닉네임 + 이메일이 일치하는 회원 정보 반환
+    public User findAccountByNicknameAndEmail(String nickname, String email) {
+        if (nickname == null || nickname.trim().isEmpty()
+                || email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("닉네임과 이메일을 모두 입력해주세요.");
+        }
+
+        return userDao.findByNicknameAndEmail(nickname.trim(), email.trim())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 회원 정보가 없습니다."));
+    }
+
+    // 비밀번호 찾기 - 아이디 + 이메일이 일치하면 새 비밀번호로 직접 변경
+    public void resetPassword(String loginId, String email, String newPassword) {
+        if (loginId == null || loginId.trim().isEmpty()
+                || email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("아이디와 이메일을 모두 입력해주세요.");
+        }
+
+        User user = userDao.findByLoginIdAndEmail(loginId.trim(), email.trim())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 회원 정보가 없습니다."));
+
+        if (newPassword == null || !PW_PATTERN.matcher(newPassword).matches()) {
+            throw new IllegalArgumentException("비밀번호는 영문+숫자+특수문자(!@#$%) 조합 8~16자여야 합니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDao.save(user);
+    }
+
     // 업로드된 프로필 사진을 서버 디스크에 저장하고, 브라우저가 접근할 URL 경로를 반환
     private String saveProfileImage(Long userId, MultipartFile file) {
         try {
@@ -185,5 +233,13 @@ public class UserService {
         } catch (IOException e) {
             throw new IllegalArgumentException("프로필 사진 저장에 실패했습니다.");
         }
+    }
+
+    // ⬇️ 수정된 부분: 회원 탈퇴 - 소프트 삭제 대신 행 자체를 완전히 삭제(하드 삭제)
+    public void withdraw(Long userId) {
+        User user = userDao.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        userDao.delete(user);
     }
 }

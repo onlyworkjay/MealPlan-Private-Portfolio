@@ -16,8 +16,11 @@ public class EmailController {
     @Autowired
     private EmailSender emailSender;
 
-    // 이메일 -> 인증코드 임시 저장 (실제 서비스라면 Redis 권장)
-    private final ConcurrentHashMap<String, String> codeStore = new ConcurrentHashMap<>();
+    // 인증코드 유효 시간 (밀리초) - 프론트엔드 타이머(3분)와 동일하게 맞춤
+    private static final long CODE_TTL_MILLIS = 3 * 60 * 1000;
+
+    // 이메일 -> 인증코드 정보 임시 저장 (실제 서비스라면 Redis 권장)
+    private final ConcurrentHashMap<String, CodeEntry> codeStore = new ConcurrentHashMap<>();
 
     // 인증번호 전송
     @PostMapping("/email-verification")
@@ -34,7 +37,8 @@ public class EmailController {
         }
         String authCode = sb.toString();
 
-        codeStore.put(email, authCode); // 코드 저장
+        long expiresAt = System.currentTimeMillis() + CODE_TTL_MILLIS;
+        codeStore.put(email, new CodeEntry(authCode, expiresAt)); // 코드 + 만료시각 저장
 
         // ↓↓↓ 추가: 콘솔에 인증번호 출력 (임시, 테스트용) ↓↓↓
         System.out.println("=====================================");
@@ -55,12 +59,18 @@ public class EmailController {
         String email = request.getEmail();
         String code  = request.getCode();
 
-        String savedCode = codeStore.get(email);
+        CodeEntry entry = codeStore.get(email);
 
-        if (savedCode == null) {
+        if (entry == null) {
             return ResponseEntity.badRequest().body("인증번호를 먼저 요청해주세요.");
         }
-        if (!savedCode.equals(code)) {
+
+        if (System.currentTimeMillis() > entry.expiresAt()) {
+            codeStore.remove(email); // 만료된 코드는 정리
+            return ResponseEntity.badRequest().body("인증번호가 만료되었습니다. 다시 요청해주세요.");
+        }
+
+        if (!entry.code().equals(code)) {
             return ResponseEntity.badRequest().body("인증번호가 일치하지 않습니다.");
         }
 
@@ -82,4 +92,7 @@ public class EmailController {
         public String getCode() { return code; }
         public void setCode(String code) { this.code = code; }
     }
+
+    // 인증코드와 만료시각을 함께 보관하기 위한 내부 record
+    private record CodeEntry(String code, long expiresAt) {}
 }

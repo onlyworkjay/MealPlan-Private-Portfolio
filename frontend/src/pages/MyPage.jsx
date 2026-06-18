@@ -67,6 +67,14 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
 
+  // 엔터 키 입력 시 지정한 동작 실행 (비밀번호 입력칸에서 버튼 안 눌러도 넘어가게)
+  const handleEnterKey = (e, callback) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      callback();
+    }
+  };
+
   // 프로필 사진 변경
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -218,11 +226,32 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       return;
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "비밀번호 변경이 성공되었습니다",
-      confirmButtonColor: "#38BDF8",
-    });
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKSERVER}/users/password`,
+        { currentPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      .then(() => {
+        Swal.fire({
+          icon: "success",
+          title: "비밀번호 변경이 성공되었습니다",
+          confirmButtonColor: "#38BDF8",
+        });
+        setPwStep(1);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordMatch(null);
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "비밀번호 변경에 실패했습니다",
+          text: err.response?.data || "잠시 후 다시 시도해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
+      });
   };
 
   const handleVerifyWithdrawPassword = () => {
@@ -242,6 +271,35 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       })
       .catch(() => {
         setWithdrawPasswordError("비밀번호가 일치하지 않습니다");
+      });
+  };
+
+  // ⬇️ 추가된 부분: 실제로 서버에 탈퇴 요청을 보내고, 성공하면 안내 후 로그아웃 처리
+  // (백엔드에 /users/withdraw 엔드포인트 추가가 필요합니다)
+  const handleWithdraw = () => {
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKSERVER}/users/withdraw`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      .then(() => {
+        Swal.fire({
+          icon: "success",
+          title: "회원 탈퇴가 정상적으로 처리되었습니다",
+          confirmButtonColor: "#38BDF8",
+        }).then(() => {
+          onLogout();
+          onNavigate("feed");
+        });
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "회원 탈퇴에 실패했습니다",
+          text: err.response?.data || "잠시 후 다시 시도해주세요.",
+          confirmButtonColor: "#38BDF8",
+        });
       });
   };
 
@@ -269,8 +327,8 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   className={tab === m.key ? styles.active : ""}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (tab === "profile" && m.key !== "profile") {
-                      // 저장 안 하고 떠나는 거라서 임시로 골랐던 값들 전부 버리기
+                    if (tab !== m.key) {
+                      // 다른 탭으로 이동하는 거라서 임시로 입력/진행 중이던 값들 전부 초기화
                       setPhotoPreview(null);
                       setPhotoFile(null);
                       setClearImage(false);
@@ -279,6 +337,17 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                       setNicknameAvailable(null);
                       setEmail("");
                       setEmailVerified(false);
+
+                      setPwStep(1);
+                      setCurrentPassword("");
+                      setCurrentPasswordError("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                      setPasswordMatch(null);
+
+                      setWithdrawStep(1);
+                      setWithdrawPassword("");
+                      setWithdrawPasswordError("");
                     }
                     setTab(m.key);
                   }}
@@ -445,6 +514,9 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                             setCurrentPassword(e.target.value);
                             setCurrentPasswordError("");
                           }}
+                          onKeyDown={(e) =>
+                            handleEnterKey(e, handleVerifyCurrentPassword)
+                          }
                         />
                         {currentPasswordError && (
                           <div className={styles.check_fail}>
@@ -479,6 +551,9 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                                 : null,
                             );
                           }}
+                          onKeyDown={(e) =>
+                            handleEnterKey(e, handleChangePassword)
+                          }
                         />
                       </div>
                       <div className="form-group">
@@ -497,6 +572,9 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                               value ? newPassword === value : null,
                             );
                           }}
+                          onKeyDown={(e) =>
+                            handleEnterKey(e, handleChangePassword)
+                          }
                         />
                         {passwordMatch === true && (
                           <div className={styles.match_ok}>
@@ -546,6 +624,9 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                             setWithdrawPassword(e.target.value);
                             setWithdrawPasswordError("");
                           }}
+                          onKeyDown={(e) =>
+                            handleEnterKey(e, handleVerifyWithdrawPassword)
+                          }
                         />
                         {withdrawPasswordError && (
                           <div className={styles.check_fail}>
@@ -573,10 +654,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                     </div>
                     <button
                       className={`btn btn-sm ${styles.btn_delete}`}
-                      onClick={() => {
-                        onLogout();
-                        onNavigate("feed");
-                      }}
+                      onClick={handleWithdraw}
                     >
                       회원 탈퇴하기
                     </button>
