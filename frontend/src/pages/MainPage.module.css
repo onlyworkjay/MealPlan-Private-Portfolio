@@ -11,6 +11,7 @@
   position: relative;
   overflow: hidden;
 }
+
 .hero::before {
   content: "";
   position: absolute;
@@ -23,10 +24,12 @@
   opacity: 0.25;
   pointer-events: none;
 }
+
 .heroInner {
   position: relative;
   z-index: 1;
 }
+
 .heroBadge {
   display: inline-flex;
   align-items: center;
@@ -41,6 +44,7 @@
   padding: 5px 14px;
   margin-bottom: 20px;
 }
+
 .heroBadgeDot {
   width: 7px;
   height: 7px;
@@ -48,6 +52,7 @@
   background: var(--primary);
   animation: pulse 2s infinite;
 }
+
 @keyframes pulse {
   0%,
   100% {
@@ -59,6 +64,7 @@
     transform: scale(1.4);
   }
 }
+
 .heroTitle {
   font-size: clamp(34px, 5.5vw, 60px);
   font-weight: 900;
@@ -66,10 +72,12 @@
   letter-spacing: -1px;
   margin-bottom: 18px;
 }
+
 .heroTitle em {
   font-style: normal;
   color: var(--primary);
 }
+
 .heroDesc {
   font-size: clamp(15px, 1.8vw, 18px);
   color: var(--text-sub);
@@ -77,17 +85,20 @@
   margin-bottom: 32px;
   line-height: 1.75;
 }
+
 .heroBtns {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .heroCards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-top: 56px;
 }
+
 .heroCard {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -95,15 +106,18 @@
   padding: 20px 18px;
   box-shadow: var(--shadow-sm);
 }
+
 .heroCardIcon {
   font-size: 26px;
   margin-bottom: 10px;
 }
+
 .heroCardTitle {
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 4px;
 }
+
 .heroCardDesc {
   font-size: 12px;
   color: var(--text-sub);
@@ -126,6 +140,7 @@
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
+
 .searchBox {
   flex: 1;
   min-width: 200px;
@@ -138,9 +153,11 @@
   padding: 0 16px;
   transition: border-color var(--ease);
 }
+
 .searchBox:focus-within {
   border-color: var(--primary);
 }
+
 .searchBox input {
   flex: 1;
   border: none;
@@ -151,13 +168,16 @@
   padding: 10px 0;
   outline: none;
 }
+
 .searchBox input::placeholder {
   color: var(--text-light);
 }
+
 .searchIcon {
   color: var(--text-light);
   font-size: 16px;
 }
+
 .searchClear {
   background: none;
   border: none;
@@ -165,6 +185,7 @@
   cursor: pointer;
   font-size: 16px;
 }
+
 .filterDate {
   display: flex;
   align-items: center;
@@ -179,6 +200,7 @@
   transition: border-color var(--ease);
   cursor: pointer;
 }
+
 .filterDate:hover {
   border-color: var(--primary);
 }
@@ -195,9 +217,11 @@
   font-family: inherit;
   transition: border-color var(--ease);
 }
+
 .sortSelect:hover {
   border-color: var(--primary);
 }
+
 .sortSelect:focus {
   outline: none;
   border-color: var(--primary);
@@ -209,19 +233,23 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
+
 .postsEmpty {
   text-align: center;
   padding: 64px 0;
   color: var(--text-light);
 }
+
 .postsEmptyIcon {
   font-size: 40px;
   margin-bottom: 12px;
 }
+
 .postsEmptyTitle {
   font-size: 15px;
   font-weight: 600;
 }
+
 .postsEmptySub {
   font-size: 13px;
   margin-top: 4px;
@@ -239,10 +267,12 @@
     box-shadow var(--ease);
   cursor: pointer;
 }
+
 .postCard:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
 }
+
 .postImgWrap {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -255,9 +285,11 @@
   object-fit: cover;
   transition: transform 0.4s ease;
 }
+
 .postCard:hover .postImgWrap img {
   transform: scale(1.04);
 }
+
 .postImgCount {
   position: absolute;
   top: 10px;
@@ -269,6 +301,7 @@
   padding: 3px 8px;
   border-radius: var(--r-full);
 }
+
 .postCalBadge {
   position: absolute;
   bottom: 10px;
@@ -280,15 +313,18 @@
   padding: 4px 10px;
   border-radius: var(--r-full);
 }
+
 .postBody {
   padding: 16px;
 }
+
 .postUser {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
 }
+
 .postAvatar {
   width: 28px;
   height: 28px;
@@ -302,6 +338,7 @@
   font-weight: 700;
   flex-shrink: 0;
 }
+
 .postAvatarImg {
   width: 28px;
   height: 28px;
@@ -311,10 +348,12 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
 }
+
 .postUsername {
   font-size: 13px;
   font-weight: 600;
 }
+
 .postDate {
   font-size: 11px;
   color: var(--text-light);
@@ -344,12 +383,14 @@
   flex-direction: column;
   gap: 20px;
 }
+
 .sidebarCard {
   background: var(--bg-alt);
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 20px;
 }
+
 .sidebarTitle {
   font-size: 14px;
   font-weight: 700;
@@ -358,20 +399,24 @@
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
+
 .sidebarCta {
   background: var(--primary-soft);
   border: 1px solid var(--primary);
   text-align: center;
 }
+
 .sidebarCtaIcon {
   font-size: 28px;
   margin-bottom: 8px;
 }
+
 .sidebarCtaTitle {
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 6px;
 }
+
 .sidebarCtaDesc {
   font-size: 12px;
   color: var(--text-sub);
@@ -455,12 +500,15 @@
   border-bottom: 1px solid var(--border-soft);
   font-size: 13px;
 }
+
 .statRow:last-child {
   border-bottom: none;
 }
+
 .statLabel {
   color: var(--text-sub);
 }
+
 .statVal {
   font-weight: 700;
   color: var(--primary-dark);
@@ -470,11 +518,13 @@
 .pageHeader {
   margin-bottom: 20px;
 }
+
 .pageHeader h1 {
   font-size: 26px;
   font-weight: 900;
   margin-bottom: 4px;
 }
+
 .pageHeader p {
   font-size: 14px;
   color: var(--text-sub);
