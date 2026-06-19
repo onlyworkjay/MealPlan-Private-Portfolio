@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
 import styles from "./MyPage.module.css";
 import EmailAuth from "../emailauth/EmailAuth";
 import defaultProfile from "../assets/default-profile.svg";
 import { useAuth } from "../contexts/AuthContext";
+import { showSwal } from "../utils/SwalAlert";
 
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,8}$/;
 const PW_PATTERN = /^[a-zA-Z0-9!@#$%]{8,16}$/;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const POSTS_PER_PAGE = 10;
 
 const MENU = [
   { key: "posts", label: "내 게시물" },
@@ -35,6 +37,11 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   // ⬇️ 수정된 부분: MOCK_MY_POSTS 대신 실제 백엔드(/writes/my)에서 내 게시물을 불러옴
   const [myPosts, setMyPosts] = useState([]);
   const [myPostsLoading, setMyPostsLoading] = useState(false);
+
+  // 내 게시물 검색 / 정렬 / 페이지네이션
+  const [postSearch, setPostSearch] = useState("");
+  const [postSortOrder, setPostSortOrder] = useState("latest"); // "latest" | "oldest"
+  const [currentPage, setCurrentPage] = useState(1);
 
   // 프로필 사진
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -64,6 +71,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
 
   // 내 게시물 목록을 불러오는 함수 (탭 진입 시, 그리고 삭제 후 갱신할 때도 재사용)
+  // 정렬에 필요한 원본 날짜(rawDate)도 함께 보관 (화면 표시용 date는 포맷된 문자열)
   const fetchMyPosts = () => {
     setMyPostsLoading(true);
     axios
@@ -76,15 +84,15 @@ export default function MyPage({ user, onLogout, onNavigate }) {
             id: w.writeId,
             title: w.title,
             date: formatDateTime(w.createdAt),
+            rawDate: w.createdAt,
             calories: w.calories,
           })),
         );
       })
       .catch(() => {
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "게시물을 불러오지 못했습니다",
-          confirmButtonColor: "#38BDF8",
         });
       })
       .finally(() => setMyPostsLoading(false));
@@ -99,16 +107,44 @@ export default function MyPage({ user, onLogout, onNavigate }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, token]);
 
+  // 검색 필터 (제목 기준)
+  const filteredPosts = myPosts.filter(
+    (p) => !postSearch || p.title.includes(postSearch),
+  );
+
+  // 정렬 (최신순 / 오래된순)
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    const diff = new Date(a.rawDate) - new Date(b.rawDate);
+    return postSortOrder === "latest" ? -diff : diff;
+  });
+
+  // 검색어/정렬/게시물 개수가 바뀌면 1페이지로 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [postSearch, postSortOrder, myPosts.length]);
+
+  // 페이지네이션 계산 (검색/정렬이 적용된 결과 기준)
+  const totalPages = Math.max(1, Math.ceil(sortedPosts.length / POSTS_PER_PAGE));
+  const paginatedPosts = sortedPosts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE,
+  );
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
   // 게시물 삭제 - 확인 팝업 후 실제 백엔드(/writes/{id}) 삭제 요청, 성공 시 목록에서 바로 제거
   const handleDeletePost = (id) => {
-    Swal.fire({
+    showSwal({
+      type: "warning",
       title: "정말 삭제하시겠습니까?",
       text: "삭제한 게시물은 복구할 수 없습니다.",
-      icon: "warning",
-      showCancelButton: true,
       confirmButtonText: "삭제",
-      cancelButtonText: "취소",
       confirmButtonColor: "#ef4444",
+      showCancelButton: true,
+      cancelButtonText: "취소",
     }).then((result) => {
       if (!result.isConfirmed) return;
 
@@ -118,18 +154,13 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         })
         .then(() => {
           setMyPosts((prev) => prev.filter((p) => p.id !== id));
-          Swal.fire({
-            icon: "success",
-            title: "삭제되었습니다",
-            confirmButtonColor: "#38BDF8",
-          });
+          showSwal({ type: "success", title: "삭제되었습니다" });
         })
         .catch((err) => {
-          Swal.fire({
-            icon: "error",
+          showSwal({
+            type: "error",
             title: "삭제에 실패했습니다",
             text: err.response?.data || "잠시 후 다시 시도해주세요.",
-            confirmButtonColor: "#38BDF8",
           });
         });
     });
@@ -143,10 +174,21 @@ export default function MyPage({ user, onLogout, onNavigate }) {
     }
   };
 
-  // 프로필 사진 변경
+  // 프로필 사진 변경 - JPG, JPEG, PNG, WEBP 형식만 허용
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      showSwal({
+        type: "warning",
+        title: "지원하지 않는 파일 형식입니다",
+        text: "JPG, JPEG, PNG, WEBP 형식의 이미지만 업로드할 수 있습니다.",
+      });
+      e.target.value = ""; // 같은 파일을 다시 선택해도 onChange가 발생하도록 input 값 초기화
+      return;
+    }
+
     setPhotoFile(file);
     setClearImage(false);
     const reader = new FileReader();
@@ -164,11 +206,10 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const checkNickname = () => {
     const trimmed = nickname.trim();
     if (!NICKNAME_PATTERN.test(trimmed)) {
-      Swal.fire({
-        icon: "warning",
+      showSwal({
+        type: "warning",
         title: "닉네임 형식을 확인해주세요",
         text: "2~8자, 영문·숫자·한글만 가능합니다",
-        confirmButtonColor: "#38BDF8",
       });
       return;
     }
@@ -182,38 +223,28 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         setNicknameAvailable(!res.data);
       })
       .catch(() => {
-        Swal.fire({
-          icon: "error",
-          title: "중복 확인에 실패했습니다",
-          confirmButtonColor: "#38BDF8",
-        });
+        showSwal({ type: "error", title: "중복 확인에 실패했습니다" });
       });
   };
 
   const handleSaveProfile = () => {
     if (nickname.trim() && !nicknameChecked) {
-      Swal.fire({
-        icon: "warning",
+      showSwal({
+        type: "warning",
         title: "닉네임 중복확인을 먼저 진행해주세요",
-        confirmButtonColor: "#38BDF8",
       });
       return;
     }
 
     if (nickname.trim() && nicknameChecked && !nicknameAvailable) {
-      Swal.fire({
-        icon: "warning",
-        title: "사용할 수 없는 닉네임입니다",
-        confirmButtonColor: "#38BDF8",
-      });
+      showSwal({ type: "warning", title: "사용할 수 없는 닉네임입니다" });
       return;
     }
 
     if (email.trim() && !emailVerified) {
-      Swal.fire({
-        icon: "warning",
+      showSwal({
+        type: "warning",
         title: "이메일 인증을 먼저 완료해주세요",
-        confirmButtonColor: "#38BDF8",
       });
       return;
     }
@@ -238,18 +269,13 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         setPhotoFile(null);
         setClearImage(false);
         setPhotoPreview(null);
-        Swal.fire({
-          icon: "success",
-          title: "저장되었습니다",
-          confirmButtonColor: "#38BDF8",
-        });
+        showSwal({ type: "success", title: "저장되었습니다" });
       })
       .catch((err) => {
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "저장에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
       });
   };
@@ -276,21 +302,16 @@ export default function MyPage({ user, onLogout, onNavigate }) {
 
   const handleChangePassword = () => {
     if (!PW_PATTERN.test(newPassword)) {
-      Swal.fire({
-        icon: "warning",
+      showSwal({
+        type: "warning",
         title: "비밀번호 형식을 확인해주세요",
         text: "영문·숫자·특수문자(!@#$%) 조합 8~16자여야 합니다",
-        confirmButtonColor: "#38BDF8",
       });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Swal.fire({
-        icon: "warning",
-        title: "새 비밀번호가 일치하지 않습니다",
-        confirmButtonColor: "#38BDF8",
-      });
+      showSwal({ type: "warning", title: "새 비밀번호가 일치하지 않습니다" });
       return;
     }
 
@@ -301,10 +322,9 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         { headers: { Authorization: `Bearer ${token}` } },
       )
       .then(() => {
-        Swal.fire({
-          icon: "success",
+        showSwal({
+          type: "success",
           title: "비밀번호 변경이 성공되었습니다",
-          confirmButtonColor: "#38BDF8",
         });
         setPwStep(1);
         setCurrentPassword("");
@@ -313,11 +333,10 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         setPasswordMatch(null);
       })
       .catch((err) => {
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "비밀번호 변경에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
       });
   };
@@ -350,21 +369,19 @@ export default function MyPage({ user, onLogout, onNavigate }) {
         { headers: { Authorization: `Bearer ${token}` } },
       )
       .then(() => {
-        Swal.fire({
-          icon: "success",
+        showSwal({
+          type: "success",
           title: "회원 탈퇴가 정상적으로 처리되었습니다",
-          confirmButtonColor: "#38BDF8",
         }).then(() => {
           onLogout();
           onNavigate("feed");
         });
       })
       .catch((err) => {
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "회원 탈퇴에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
       });
   };
@@ -445,50 +462,129 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   <h1>내 게시물</h1>
                   <p>내가 작성한 식단 기록 모아보기</p>
                 </div>
+
+                {!myPostsLoading && myPosts.length > 0 && (
+                  <div className={styles.postsToolbar}>
+                    <div className={styles.searchBox}>
+                      <span className={styles.searchIcon}>🔍</span>
+                      <input
+                        placeholder="제목으로 검색"
+                        value={postSearch}
+                        onChange={(e) => setPostSearch(e.target.value)}
+                      />
+                      {postSearch && (
+                        <button
+                          className={styles.searchClear}
+                          onClick={() => setPostSearch("")}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    <select
+                      className={styles.sortSelect}
+                      value={postSortOrder}
+                      onChange={(e) => setPostSortOrder(e.target.value)}
+                    >
+                      <option value="latest">최신순</option>
+                      <option value="oldest">오래된순</option>
+                    </select>
+                  </div>
+                )}
+
                 {myPostsLoading ? (
                   <div className={styles.my_posts_list}>불러오는 중...</div>
                 ) : myPosts.length === 0 ? (
                   <div className={styles.my_posts_list}>
                     아직 작성한 식단 기록이 없습니다.
                   </div>
-                ) : (
+                ) : sortedPosts.length === 0 ? (
                   <div className={styles.my_posts_list}>
-                    {myPosts.map((p) => (
-                      <div className={styles.my_post_item} key={p.id}>
-                        <div>
-                          <div className={styles.my_post_title}>{p.title}</div>
-                          <div className={styles.my_post_date}>{p.date}</div>
-                        </div>
-                        <div className={styles.my_post_right}>
-                          <span className={styles.my_post_cal}>
-                            🔥 {p.calories} kcal
-                          </span>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() =>
-                              onNavigate(`mealplan/write-view/${p.id}`)
-                            }
-                          >
-                            상세보기
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() =>
-                              onNavigate(`mealplan/write-modify/${p.id}`)
-                            }
-                          >
-                            수정
-                          </button>
-                          <button
-                            className={`btn btn-sm ${styles.btn_delete}`}
-                            onClick={() => handleDeletePost(p.id)}
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                    검색 결과가 없어요.
                   </div>
+                ) : (
+                  <>
+                    <div className={styles.my_posts_list}>
+                      {paginatedPosts.map((p) => (
+                        <div className={styles.my_post_item} key={p.id}>
+                          <div>
+                            <div className={styles.my_post_title}>
+                              {p.title}
+                            </div>
+                            <div className={styles.my_post_date}>{p.date}</div>
+                          </div>
+                          <div className={styles.my_post_right}>
+                            <span className={styles.my_post_cal}>
+                              🔥 {p.calories} kcal
+                            </span>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() =>
+                                onNavigate(`mealplan/write-view/${p.id}`)
+                              }
+                            >
+                              상세보기
+                            </button>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() =>
+                                onNavigate(`mealplan/write-modify/${p.id}`)
+                              }
+                            >
+                              수정
+                            </button>
+                            <button
+                              className={`btn btn-sm ${styles.btn_delete}`}
+                              onClick={() => handleDeletePost(p.id)}
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 페이지네이션 - 검색/정렬 결과가 한 페이지 분량(10개)을 초과할 때만 표시 */}
+                    {sortedPosts.length > POSTS_PER_PAGE && (
+                      <div className={styles.pagination}>
+                        <button
+                          className={styles.pageBtn}
+                          onClick={() => goToPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          aria-label="이전 페이지"
+                        >
+                          ‹
+                        </button>
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1,
+                        ).map((page) => (
+                          <button
+                            key={page}
+                            className={[
+                              styles.pageBtn,
+                              page === currentPage
+                                ? styles.pageBtnActive
+                                : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            onClick={() => goToPage(page)}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button
+                          className={styles.pageBtn}
+                          onClick={() => goToPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          aria-label="다음 페이지"
+                        >
+                          ›
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}

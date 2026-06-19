@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,10 +48,21 @@ public class WriteService {
     private static final long MAX_IMAGE_SIZE = 10L * 1024 * 1024; // 10MB
     private static final int TITLE_MAX = 50;
     private static final int CONTENT_MAX = 1000;
+    private static final int DAILY_WRITE_LIMIT = 3; // 하루 최대 작성 가능 게시물 수
 
     // 식단 기록(게시물) 등록
     public Write createWrite(Long userId, String title, String content,
                              Integer calories, List<MultipartFile> images) {
+
+        // 하루 작성 횟수 제한 (자정 기준 자동 초기화 - LocalDate.now()가 매번 그 시점의 날짜를 기준으로 계산하므로
+        // 별도 스케줄러/배치 없이도 자정이 지나면 자동으로 카운트가 0부터 다시 시작됨)
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfToday.plusDays(1);
+        long todayCount = writeDao.countByUserIdAndCreatedAtBetween(userId, startOfToday, startOfTomorrow);
+
+        if (todayCount >= DAILY_WRITE_LIMIT) {
+            throw new IllegalArgumentException("하루 최대 " + DAILY_WRITE_LIMIT + "개까지만 작성할 수 있습니다.");
+        }
 
         if (title == null || title.trim().isEmpty() || title.trim().length() > TITLE_MAX) {
             throw new IllegalArgumentException("제목은 1~" + TITLE_MAX + "자로 입력해주세요.");

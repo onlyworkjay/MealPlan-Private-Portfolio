@@ -133,6 +133,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  min-width: 0; /* flex 자식이 내용물 크기로 부모를 밀어내는 현상 방지 */
 }
 
 .slideImg {
@@ -146,6 +147,8 @@
 
 .slideInfo {
   text-align: center;
+  width: 100%;
+  flex-shrink: 0; /* 사진 영역에 밀려서 줄어들지 않도록 고정 */
 }
 
 .slideDate {
@@ -165,6 +168,72 @@
   color: var(--text-sub);
 }
 
+/* 사진 그리드 - 1장이면 1열, 2~4장이면 가로로 나열
+   사진 개수와 상관없이 높이를 고정해서 카드 전체 크기가 출렁이지 않도록 함 */
+.slideImagesGrid {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 680px;
+  height: 360px;
+  max-height: 360px;
+  overflow: hidden; /* 혹시 내부 이미지가 넘쳐도 영역 밖으로 안 새어나가게 */
+}
+
+.slideImgItem {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--primary-soft);
+  cursor: pointer;
+  transition: transform var(--ease), opacity var(--ease);
+}
+
+.slideImgItem:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+/* 원본 사진 모달 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.modalImg {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+  cursor: default;
+}
+
+.modalClose {
+  position: fixed;
+  top: 20px;
+  right: 28px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.modalClose:hover {
+  opacity: 0.7;
+}
+
 /* 반응형 */
 @media (max-width: 1024px) {
   .grid {
@@ -175,5 +244,8 @@
 @media (max-width: 768px) {
   .slideImg {
     max-height: 300px;
+  }
+  .slideImagesGrid {
+    height: 260px;
   }
 }

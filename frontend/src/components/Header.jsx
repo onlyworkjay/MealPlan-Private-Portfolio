@@ -6,7 +6,7 @@ import logo from "../assets/logo.svg";
 import defaultProfile from "../assets/default-profile.svg";
 
 const NAV_LINKS = [
-  { label: "피드", href: "/" },
+  { label: "전체 피드", href: "/feed" },
   { label: "날짜별 조회", href: "/mealplan/calendar" },
   { label: "통계", href: "/mealplan/stats" },
 ];

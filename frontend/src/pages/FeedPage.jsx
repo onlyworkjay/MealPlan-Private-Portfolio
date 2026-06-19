@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import styles from "./MainPage.module.css";
+import styles from "./FeedPage.module.css";
 import logo from "../assets/logo.svg";
 import defaultProfile from "../assets/default-profile.svg";
 import { useAuth } from "../contexts/AuthContext";
 import { showSwal } from "../utils/SwalAlert";
 
-// 날짜를 "YYYY.MM.DD" 형식으로 표시 (오늘 날짜 비교용)
 const formatDate = (isoString) => {
   if (!isoString) return "";
   const d = new Date(isoString);
@@ -17,7 +16,6 @@ const formatDate = (isoString) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
-// 날짜, 시간을 "YYYY.MM.DD HH:MM" 형식으로 표시 (카드에 보여줄 때 사용, 초는 표시 X)
 const formatDateTime = (isoString) => {
   if (!isoString) return "";
   const d = new Date(isoString);
@@ -29,7 +27,6 @@ const formatDateTime = (isoString) => {
   return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
 };
 
-// 날짜를 "YYYY-MM-DD" 형식으로 변환 (캘린더 셀 키와 맞추기 위한 용도)
 const toDateKey = (isoString) => {
   if (!isoString) return null;
   const d = new Date(isoString);
@@ -39,11 +36,9 @@ const toDateKey = (isoString) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-// 기본 썸네일 (사진이 없는 경우를 위한 안전장치)
 const FALLBACK_THUMB =
   "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80";
 
-// 하루 최대 작성 가능 게시물 수
 const DAILY_WRITE_LIMIT = 3;
 
 function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
@@ -137,23 +132,21 @@ function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
   );
 }
 
-const MainPage = () => {
+const FeedPage = () => {
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // 검색 / 정렬 - 오늘의 피드 범위 내에서만 적용
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState("latest"); // "latest" | "oldest"
-
-  // 페이지네이션 - 오늘의 피드용
+  // 메인페이지(오늘의 피드) 캘린더에서 날짜를 선택해 들어온 경우, URL의 ?date= 값으로 초기 필터링
+  const [selectedDate, setSelectedDate] = useState(searchParams.get("date"));
+  const [sortOrder, setSortOrder] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const POSTS_PER_PAGE = 10;
 
-  // 백엔드(/writes)에서 전체 피드 불러옴 (오늘 글만 골라쓰기 위해 일단 전체 로드)
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 캘린더 점 표시 + 일일 작성 횟수 체크용 - 로그인한 내가 작성한 게시물 원본 데이터 보관
   const [myPosts, setMyPosts] = useState([]);
 
   useEffect(() => {
@@ -181,7 +174,6 @@ const MainPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // 캘린더 점 + 일일 작성 횟수는 "내가 올린 기록"만 반영 - /writes/my를 그대로 재사용
   useEffect(() => {
     if (!isLoggedIn || !token) {
       setMyPosts([]);
@@ -200,10 +192,8 @@ const MainPage = () => {
       });
   }, [isLoggedIn, token]);
 
-  // 캘린더에 점 찍을 날짜 Set은 myPosts로부터 파생
   const myDates = new Set(myPosts.map((w) => toDateKey(w.createdAt)));
 
-  // 기록하기 버튼 클릭 시 - 오늘 작성한 게시물 수가 제한(3개)을 넘으면 작성 페이지 진입 차단
   const handleWriteClick = () => {
     const todayKey = toDateKey(new Date().toISOString());
     const todayMyPostCount = myPosts.filter(
@@ -223,45 +213,28 @@ const MainPage = () => {
     navigate("/mealplan/write");
   };
 
-  // 캘린더에서 날짜를 선택하면, 해당 날짜로 필터링된 전체 피드 페이지로 이동
-  const handleDateSelect = (dateKey) => {
-    navigate(`/feed?date=${dateKey}`);
-  };
-
-  // 오늘 날짜 문자열 ("YYYY.MM.DD")
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}.${String(
-    today.getMonth() + 1,
-  ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
-
-  // 오늘의 피드 - 오늘 작성된 게시물만 우선 추출
-  const todaysPosts = posts.filter((p) => p.dateOnly === todayStr);
-
-  // 검색 필터 (제목, 내용) - 오늘의 피드 범위 안에서만 적용
-  const filtered = todaysPosts.filter(
+  const filtered = posts.filter(
     (p) =>
-      !search ||
-      p.title.includes(search) ||
-      (p.content || "").includes(search),
+      (!search ||
+        p.title.includes(search) ||
+        (p.content || "").includes(search)) &&
+      (!selectedDate || p.dateOnly === selectedDate.replace(/-/g, ".")),
   );
 
-  // 정렬 (최신순 / 오래된순)
   const sorted = [...filtered].sort((a, b) => {
     const diff = new Date(a.createdAt) - new Date(b.createdAt);
     return sortOrder === "latest" ? -diff : diff;
   });
 
-  // 페이지네이션 계산
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortOrder, selectedDate]);
+
   const totalPages = Math.max(1, Math.ceil(sorted.length / POSTS_PER_PAGE));
   const paginatedPosts = sorted.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
     currentPage * POSTS_PER_PAGE,
   );
-
-  // 검색어/정렬이 바뀌거나, 오늘 게시물 자체가 바뀌면 1페이지로 초기화
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, sortOrder, todaysPosts.length]);
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -269,86 +242,31 @@ const MainPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 사이드바 통계 (전체 게시물 기준)
   const totalPosts = posts.length;
+
   const avgCalories =
     totalPosts === 0
       ? "0.0"
       : (posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts).toFixed(
           1,
         );
-  const todayCount = todaysPosts.length;
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}.${String(
+    today.getMonth() + 1,
+  ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+
+  const todayCount = posts.filter((p) => p.dateOnly === todayStr).length;
 
   return (
     <div className={styles.page}>
-      {!isLoggedIn && (
-        <section className={styles.hero}>
-          <div className={`wrap ${styles.heroInner}`}>
-            <div className={styles.heroBadge}>
-              <span className={styles.heroBadgeDot} />
-              식단 기록 SNS 서비스
-            </div>
-            <h1 className={styles.heroTitle}>
-              먹고 기록하고
-              <br />
-              <em>변화를 확인하세요</em>
-            </h1>
-            <p className={styles.heroDesc}>
-              음식 사진과 칼로리를 기록하고,
-              <br />
-              날짜별 식단 변화와 체중 그래프로 내 몸의 변화를 한눈에 확인하세요.
-            </p>
-            <div className={styles.heroBtns}>
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={() => navigate("/users/join")}
-              >
-                회원가입 하러 가기
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={() => navigate("/users/login")}
-              >
-                로그인
-              </button>
-            </div>
-            <div className={styles.heroCards}>
-              {[
-                {
-                  icon: "📸",
-                  title: "사진으로 기록",
-                  desc: "최대 4장까지 업로드. JPG·PNG·WEBP 지원",
-                },
-                {
-                  icon: "🔥",
-                  title: "칼로리 추적",
-                  desc: "매 끼니 칼로리를 직접 입력해 관리",
-                },
-                {
-                  icon: "📊",
-                  title: "변화 시각화",
-                  desc: "체중 그래프 + 사진 슬라이드로 확인",
-                },
-              ].map((c) => (
-                <div className={styles.heroCard} key={c.title}>
-                  <div className={styles.heroCardIcon}>{c.icon}</div>
-                  <div className={styles.heroCardTitle}>{c.title}</div>
-                  <div className={styles.heroCardDesc}>{c.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       <div className="wrap">
         <div className={styles.feedLayout}>
           <div>
             <div className={styles.pageHeader}>
-              <h1>오늘의 피드</h1>
-              <p>오늘 등록된 식단 기록을 확인해 보세요</p>
+              <h1>전체 피드</h1>
+              <p>모든 사용자의 식단 기록을 확인해 보세요</p>
             </div>
-
             <div className={styles.feedToolbar}>
               <div className={styles.searchBox}>
                 <span className={styles.searchIcon}>🔍</span>
@@ -374,6 +292,14 @@ const MainPage = () => {
                 <option value="latest">최신순</option>
                 <option value="oldest">오래된순</option>
               </select>
+              {selectedDate && (
+                <button
+                  className={styles.filterDate}
+                  onClick={() => setSelectedDate(null)}
+                >
+                  📅 {selectedDate} ×
+                </button>
+              )}
               {isLoggedIn && (
                 <button
                   className="btn btn-primary btn-sm"
@@ -383,24 +309,21 @@ const MainPage = () => {
                 </button>
               )}
             </div>
-
             {loading ? (
               <div className={styles.postsEmpty}>
                 <div className={styles.postsEmptyTitle}>불러오는 중...</div>
               </div>
             ) : sorted.length === 0 ? (
               <div className={styles.postsEmpty}>
-                <div className={styles.postsEmptyIcon}>
-                  {todaysPosts.length === 0 ? "🍽️" : "🔍"}
-                </div>
+                <div className={styles.postsEmptyIcon}>🔍</div>
                 <div className={styles.postsEmptyTitle}>
-                  {todaysPosts.length === 0
-                    ? "오늘의 피드가 없습니다"
+                  {posts.length === 0
+                    ? "아직 등록된 식단 기록이 없어요"
                     : "검색 결과가 없어요"}
                 </div>
                 <div className={styles.postsEmptySub}>
-                  {todaysPosts.length === 0
-                    ? "오늘 등록된 식단 기록이 아직 없어요"
+                  {posts.length === 0
+                    ? "가장 먼저 식단을 기록해보세요"
                     : "다른 키워드로 검색해 보세요"}
                 </div>
               </div>
@@ -441,7 +364,6 @@ const MainPage = () => {
               </div>
             )}
 
-            {/* 페이지네이션 - 검색/정렬 결과가 한 페이지 분량(10개)을 초과할 때만 표시 */}
             {!loading && sorted.length > POSTS_PER_PAGE && (
               <div className={styles.pagination}>
                 <button
@@ -484,7 +406,7 @@ const MainPage = () => {
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📅 날짜별 보기</div>
               <MiniCalendar
-                onDateSelect={handleDateSelect}
+                onDateSelect={setSelectedDate}
                 recordDates={myDates}
               />
             </div>
@@ -525,4 +447,4 @@ const MainPage = () => {
   );
 };
 
-export default MainPage;
+export default FeedPage;

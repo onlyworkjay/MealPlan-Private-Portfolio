@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
+import FeedPage from "./pages/FeedPage";
 import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
 import FindIdPage from "./pages/FindIdPage";
@@ -36,6 +37,7 @@ function AppContent() {
       />
       <Routes>
         <Route path="/" element={<MainPage />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/users/login" element={<LoginPage />} />
         <Route path="/users/join" element={<JoinPage />} />
         <Route path="/users/find-id" element={<FindIdPage />} />

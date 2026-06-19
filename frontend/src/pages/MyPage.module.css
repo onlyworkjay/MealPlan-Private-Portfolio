@@ -272,6 +272,121 @@
   color: #ef4444;
 }
 
+/* 내 게시물 검색/정렬 툴바 */
+.postsToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-alt);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-full);
+  padding: 0 16px;
+  transition: border-color var(--ease);
+}
+
+.searchBox:focus-within {
+  border-color: var(--primary);
+}
+
+.searchBox input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  padding: 10px 0;
+  outline: none;
+}
+
+.searchBox input::placeholder {
+  color: var(--text-light);
+}
+
+.searchIcon {
+  color: var(--text-light);
+  font-size: 16px;
+}
+
+.searchClear {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.sortSelect {
+  background: var(--bg-alt);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-full);
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color var(--ease);
+}
+
+.sortSelect:hover {
+  border-color: var(--primary);
+}
+
+.sortSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 내 게시물 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.pageBtn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all var(--ease);
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .mypage_layout {

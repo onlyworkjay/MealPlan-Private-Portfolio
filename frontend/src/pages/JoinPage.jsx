@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "sweetalert2";
 import styles from "./JoinPage.module.css";
 import logo from "../assets/logo.svg";
+import { showSwal } from "../utils/SwalAlert";
 
 function JoinPage() {
   const navigate = useNavigate();
@@ -157,11 +157,10 @@ function JoinPage() {
     if (name === "nickname") {
       const cleaned = value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, "");
       if (cleaned !== value) {
-        Swal.fire({
-          icon: "warning",
+        showSwal({
+          type: "warning",
           title: "닉네임 입력 오류",
           text: "닉네임에는 한글, 영문, 숫자만 입력 가능합니다.",
-          confirmButtonColor: "#38BDF8",
         });
       }
       setCheckNickname(0); // 닉네임 변경 시 중복확인 상태 초기화
@@ -297,20 +296,15 @@ function JoinPage() {
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
     if (user.email.trim() === "") {
-      Swal.fire({
-        icon: "warning",
-        title: "이메일을 입력해주세요",
-        confirmButtonColor: "#38BDF8",
-      });
+      showSwal({ type: "warning", title: "이메일을 입력해주세요" });
       return;
     }
 
     if (!emailRegex.test(user.email)) {
-      Swal.fire({
-        icon: "warning",
+      showSwal({
+        type: "warning",
         title: "올바르지 않은 이메일 형식입니다",
         text: "이메일 주소를 다시 확인해 주세요.",
-        confirmButtonColor: "#38BDF8",
       });
       return;
     }
@@ -320,22 +314,20 @@ function JoinPage() {
         email: user.email.trim(),
       })
       .then(() => {
-        Swal.fire({
-          icon: "success",
+        showSwal({
+          type: "success",
           title: "인증번호가 전송되었습니다",
           text: "이메일을 확인해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
         setEmailCode("");
         startEmailTimer();
       })
       .catch((err) => {
         console.log(err);
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "인증번호 전송에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
       });
   };
@@ -343,11 +335,7 @@ function JoinPage() {
   // 인증번호 확인
   const verifyEmailCode = () => {
     if (emailCode.trim() === "") {
-      Swal.fire({
-        icon: "warning",
-        title: "인증번호를 입력해주세요",
-        confirmButtonColor: "#38BDF8",
-      });
+      showSwal({ type: "warning", title: "인증번호를 입력해주세요" });
       return;
     }
 
@@ -367,19 +355,14 @@ function JoinPage() {
           verified: true,
           timer: 0,
         }));
-        Swal.fire({
-          icon: "success",
-          title: "이메일 인증이 완료되었습니다",
-          confirmButtonColor: "#38BDF8",
-        });
+        showSwal({ type: "success", title: "이메일 인증이 완료되었습니다" });
       })
       .catch((err) => {
         console.log(err);
-        Swal.fire({
-          icon: "error",
+        showSwal({
+          type: "error",
           title: "인증번호가 일치하지 않습니다",
           text: err.response?.data || "다시 시도해주세요.",
-          confirmButtonColor: "#38BDF8",
         });
       });
   };
@@ -439,10 +422,10 @@ function JoinPage() {
     // 이메일을 제외한 필수 항목 전체 검사
     const errors = getRequiredFieldErrors();
     if (errors.length > 0) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "입력 내용을 확인해주세요",
-        html: errors.map((msg) => `• ${msg}`).join("<br/>"),
-        icon: "warning",
+        text: errors.map((msg) => `• ${msg}`).join("<br/>"),
       });
       return;
     }
@@ -450,38 +433,39 @@ function JoinPage() {
     // 이메일 형식 검사 (입력한 경우에만)
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (user.email.trim() !== "" && !emailRegex.test(user.email)) {
-      Swal.fire({
+      showSwal({
+        type: "error",
         title: "올바르지 않은 이메일 형식입니다",
         text: "이메일 주소를 다시 확인해 주시기 바랍니다",
-        icon: "error",
       });
       return;
     }
 
     // 이메일을 입력했지만 인증을 완료하지 않은 경우
     if (user.email.trim() !== "" && !emailVerify.verified) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "이메일 인증을 완료해주세요",
         text: "인증번호 전송 후 인증을 완료해야 합니다.",
-        icon: "warning",
       });
       return;
     }
 
-    // 이메일을 입력하지 않은 경우 경고 후 선택 유도
-    if (user.email.trim() === "") {
-      const result = await Swal.fire({
-        title: "이메일을 입력하지 않으셨습니다",
-        text: "나중에 아이디와 비밀번호를 찾으실 수 없습니다. 그래도 진행하시겠습니까?",
-        icon: "warning",
-        confirmButtonText: "회원가입 중단",
-        confirmButtonColor: "green",
-        showDenyButton: true,
-        denyButtonText: "아니오, 그냥 가입할게요",
-        denyButtonColor: "gray",
-      });
+    // 이메일을 입력하지 않은 경우 경고 후 선택 유도 (question 아이콘)
+   if (user.email.trim() === "") {
+  const result = await showSwal({
+    type: "question",
+    title: "이메일을 입력하지 않으셨습니다",
+    text: "나중에 아이디와 비밀번호를 찾으실 수 없습니다.<br/>그래도 진행하시겠습니까?",
+    confirmButtonText: "회원가입 중단",
+    confirmButtonColor: "#ef4444", // 위험/경고성 액션이라 danger 컬러로 강조
+    showCancelButton: true,
+    cancelButtonText: "아니오, 그냥 가입할게요",
+  });
 
-      if (result.isConfirmed || !result.isDenied) {
+      // "아니오, 그냥 가입할게요"(취소 버튼)를 명시적으로 눌렀을 때만 가입 진행
+      // 그 외(확인 클릭, 바깥 클릭, ESC 등)는 전부 회원가입을 안전하게 중단
+      if (result.dismiss !== "cancel") {
         return;
       }
     }
@@ -497,12 +481,11 @@ function JoinPage() {
       .post(`${import.meta.env.VITE_BACKSERVER}/users/join`, payload)
       .then((res) => {
         console.log(res.data);
-        Swal.fire({
+        showSwal({
+          type: "success",
           title: "회원가입 완료",
           text: "로그인 페이지로 이동합니다.",
-          icon: "success",
           confirmButtonText: "로그인 페이지로 이동",
-          confirmButtonColor: "green",
         }).then(() => {
           navigate("/users/login");
         });
@@ -511,10 +494,10 @@ function JoinPage() {
         console.log(err);
         const errorMessage =
           err.response?.data || "회원가입 중 오류가 발생했습니다.";
-        Swal.fire({
+        showSwal({
+          type: "warning",
           title: "회원가입에 실패하셨습니다",
           text: errorMessage,
-          icon: "warning",
         });
       });
   };

@@ -1,0 +1,38 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 김(스팀) -->
+  <path d="M44 18 Q40 12 44 6" fill="none" stroke="#fecaca" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M60 16 Q56 10 60 4" fill="none" stroke="#fecaca" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M76 18 Q72 12 76 6" fill="none" stroke="#fecaca" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 얼굴 -->
+  <path d="M60 18 C84 18 100 36 100 60 C100 84 82 102 60 102 C38 102 20 84 20 60 C20 36 36 18 60 18 Z"
+        fill="#fef2f2" stroke="#ef4444" stroke-width="5"/>
+  <!-- 볼터치 -->
+  <circle cx="38" cy="66" r="6" fill="#fecaca" opacity="0.9"/>
+  <circle cx="82" cy="66" r="6" fill="#fecaca" opacity="0.9"/>
+  <!-- 찡그린 눈썹 -->
+  <path d="M36 42 L52 48" fill="none" stroke="#b91c1c" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M84 42 L68 48" fill="none" stroke="#b91c1c" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- X 눈 -->
+  <g stroke="#b91c1c" stroke-width="4" stroke-linecap="round">
+    <line x1="40" y1="50" x2="50" y2="60"/>
+    <line x1="50" y1="50" x2="40" y2="60"/>
+    <line x1="70" y1="50" x2="80" y2="60"/>
+    <line x1="80" y1="50" x2="70" y2="60"/>
+  </g>
+  <!-- 일자 입 (당황) -->
+  <path d="M48 75 Q60 72 72 75" fill="none" stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/>
+  <!-- 포크 & 스푼 (흐트러짐) -->
+  <g transform="translate(58 95) rotate(-28)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-3" y1="-6" x2="-3" y2="-1" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="-6" x2="3" y2="-1" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(63 96) rotate(30)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-8" rx="3.2" ry="4.5" fill="#ef4444"/>
+  </g>
+  <!-- 느낌표 뱃지 -->
+  <circle cx="94" cy="88" r="17" fill="#ef4444" stroke="#ffffff" stroke-width="3"/>
+  <rect x="91" y="78" width="6" height="13" rx="3" fill="#ffffff"/>
+  <circle cx="94" cy="96" r="3" fill="#ffffff"/>
+</svg>

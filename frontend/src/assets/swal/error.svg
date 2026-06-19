@@ -1,0 +1,33 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 얼굴 (김 없음 = 지친 느낌) -->
+  <path d="M60 18 C84 18 100 36 100 60 C100 84 82 102 60 102 C38 102 20 84 20 60 C20 36 36 18 60 18 Z"
+        fill="#fff7e6" stroke="#f0a500" stroke-width="5"/>
+  <!-- 볼터치 -->
+  <circle cx="38" cy="66" r="6" fill="#ffe6b3" opacity="0.9"/>
+  <circle cx="82" cy="66" r="6" fill="#ffe6b3" opacity="0.9"/>
+  <!-- 찌푸린 눈썹 (가운데로 모임) -->
+  <path d="M34 44 L50 50" fill="none" stroke="#b97700" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M86 44 L70 50" fill="none" stroke="#b97700" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 질끈 감은 눈 (><) -->
+  <path d="M40 50 L48 56 L40 62" fill="none" stroke="#b97700" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M80 50 L72 56 L80 62" fill="none" stroke="#b97700" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 이 악문 지친 입 -->
+  <path d="M44 74 L50 80 L56 74 L62 80 L68 74 L76 80"
+        fill="none" stroke="#b97700" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 식은땀 -->
+  <path d="M88 38 C92 42 92 47 88 49 C84 47 84 42 88 38 Z" fill="#ffe6b3"/>
+  <!-- 포크 & 스푼 (힘없이 떨어뜨림) -->
+  <g transform="translate(46 97) rotate(70)">
+    <line x1="0" y1="-6" x2="0" y2="12" stroke="#f0a500" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-3" y1="-6" x2="-3" y2="-1" stroke="#f0a500" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="-6" x2="3" y2="-1" stroke="#f0a500" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(74 98) rotate(-60)">
+    <line x1="0" y1="-6" x2="0" y2="12" stroke="#f0a500" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-8" rx="3" ry="4.2" fill="#f0a500"/>
+  </g>
+  <!-- X 뱃지 -->
+  <circle cx="94" cy="88" r="17" fill="#f0a500" stroke="#ffffff" stroke-width="3"/>
+  <path d="M88 82 L100 94" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M100 82 L88 94" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

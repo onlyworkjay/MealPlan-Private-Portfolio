@@ -1,0 +1,30 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 김(스팀) -->
+  <path d="M44 18 Q40 12 44 6" fill="none" stroke="#bae6fd" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M60 16 Q56 10 60 4" fill="none" stroke="#bae6fd" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M76 18 Q72 12 76 6" fill="none" stroke="#bae6fd" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 얼굴 (밥그릇처럼 아래가 둥글게 퍼지는 형태) -->
+  <path d="M60 18 C84 18 100 36 100 60 C100 84 82 102 60 102 C38 102 20 84 20 60 C20 36 36 18 60 18 Z"
+        fill="#e0f4fd" stroke="#0284c7" stroke-width="5"/>
+  <!-- 볼터치 -->
+  <circle cx="38" cy="64" r="6" fill="#bae6fd" opacity="0.9"/>
+  <circle cx="82" cy="64" r="6" fill="#bae6fd" opacity="0.9"/>
+  <!-- 웃는 눈 -->
+  <path d="M40 52 Q46 44 52 52" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M68 52 Q74 44 80 52" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round"/>
+  <!-- 미소 -->
+  <path d="M44 66 Q60 80 76 66" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round"/>
+  <!-- 포크 & 스푼 (턱 아래 교차) -->
+  <g transform="translate(60 95) rotate(-18)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-3" y1="-6" x2="-3" y2="-1" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="-6" x2="3" y2="-1" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(60 95) rotate(18)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-8" rx="3.2" ry="4.5" fill="#0284c7"/>
+  </g>
+  <!-- 체크 뱃지 -->
+  <circle cx="94" cy="88" r="17" fill="#0284c7" stroke="#ffffff" stroke-width="3"/>
+  <path d="M86 88 L92 94 L102 82" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

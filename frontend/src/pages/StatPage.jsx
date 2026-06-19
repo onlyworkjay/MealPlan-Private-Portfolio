@@ -51,6 +51,9 @@ const StatPage = () => {
   const [slideIndex, setSlideIndex] = useState(0);
   const [writesLoading, setWritesLoading] = useState(true);
 
+  // 원본 사진 모달 - 클릭한 이미지 URL을 담아두면 모달이 열림
+  const [modalImage, setModalImage] = useState(null);
+
   const fetchStats = () => {
     if (!token) return;
     setStatsLoading(true);
@@ -74,6 +77,7 @@ const StatPage = () => {
   }, [isLoggedIn, token]);
 
   // 사진 슬라이드용 - 내 게시물 중 사진이 1장 이상 있는 것만, 날짜 오래된순으로 정렬
+  // imageUrls 전체를 보관해서, 한 게시물에 여러 장이 있으면 가로로 다 보여줄 수 있도록 함
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     setWritesLoading(true);
@@ -89,7 +93,7 @@ const StatPage = () => {
             id: w.writeId,
             dateKey: toDateKey(w.createdAt),
             title: w.title,
-            thumb: w.imageUrls[0],
+            images: w.imageUrls,
           }));
         setPhotoEntries(withPhotos);
         setSlideIndex(withPhotos.length > 0 ? withPhotos.length - 1 : 0);
@@ -258,11 +262,26 @@ const StatPage = () => {
                   ‹
                 </button>
                 <div className={styles.slideMain}>
-                  <img
-                    src={currentSlide.thumb}
-                    alt={currentSlide.title}
-                    className={styles.slideImg}
-                  />
+                  {/* 사진 1장이면 기존처럼 크게, 2장 이상이면 가로로 나열 (최대 4장) */}
+                  <div
+                    className={styles.slideImagesGrid}
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(
+                        currentSlide.images.length,
+                        4,
+                      )}, 1fr)`,
+                    }}
+                  >
+                    {currentSlide.images.slice(0, 4).map((url, idx) => (
+                      <img
+                        key={idx}
+                        src={url}
+                        alt={`${currentSlide.title} ${idx + 1}`}
+                        className={styles.slideImgItem}
+                        onClick={() => setModalImage(url)}
+                      />
+                    ))}
+                  </div>
                   <div className={styles.slideInfo}>
                     <div className={styles.slideDate}>
                       {currentSlide.dateKey}
@@ -288,6 +307,28 @@ const StatPage = () => {
           </section>
         </div>
       </div>
+
+      {/* 원본 사진 모달 - 어떤 사진을 클릭하든 원본 크기로 보여줌 */}
+      {modalImage && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setModalImage(null)}
+        >
+          <button
+            className={styles.modalClose}
+            onClick={() => setModalImage(null)}
+            aria-label="닫기"
+          >
+            ×
+          </button>
+          <img
+            src={modalImage}
+            alt="원본 사진"
+            className={styles.modalImg}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

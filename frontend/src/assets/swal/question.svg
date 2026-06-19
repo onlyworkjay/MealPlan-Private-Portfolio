@@ -1,0 +1,26 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 김(스팀) -->
+  <path d="M44 18 Q40 12 44 6" fill="none" stroke="#ddd6fe" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M60 16 Q56 10 60 4" fill="none" stroke="#ddd6fe" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M76 18 Q72 12 76 6" fill="none" stroke="#ddd6fe" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 얼굴 (살짝 갸우뚱) -->
+  <g transform="rotate(-6 60 60)">
+    <path d="M60 18 C84 18 100 36 100 60 C100 84 82 102 60 102 C38 102 20 84 20 60 C20 36 36 18 60 18 Z"
+          fill="#f5f3ff" stroke="#9333ea" stroke-width="5"/>
+    <circle cx="38" cy="66" r="6" fill="#ddd6fe" opacity="0.9"/>
+    <circle cx="82" cy="66" r="6" fill="#ddd6fe" opacity="0.9"/>
+    <circle cx="46" cy="56" r="5.5" fill="#6b21a8"/>
+    <circle cx="76" cy="58" r="4" fill="#6b21a8"/>
+    <path d="M48 75 Q60 80 70 73" fill="none" stroke="#6b21a8" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- 포크 (질문하듯 살짝 들고 있는 느낌, 한쪽만) -->
+  <g transform="translate(36 92) rotate(-35)">
+    <line x1="0" y1="-6" x2="0" y2="16" stroke="#9333ea" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-3" y1="-6" x2="-3" y2="-1" stroke="#9333ea" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="-6" x2="3" y2="-1" stroke="#9333ea" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- 물음표 뱃지 -->
+  <circle cx="94" cy="88" r="17" fill="#9333ea" stroke="#ffffff" stroke-width="3"/>
+  <path d="M89 83 Q89 77 95 77 Q101 77 101 83 Q101 88 95 89 L95 92" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="95" cy="98" r="2.6" fill="#ffffff"/>
+</svg>

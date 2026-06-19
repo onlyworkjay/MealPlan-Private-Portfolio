@@ -1,0 +1,31 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 김(스팀) -->
+  <path d="M44 18 Q40 12 44 6" fill="none" stroke="#d9f99d" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M60 16 Q56 10 60 4" fill="none" stroke="#d9f99d" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M76 18 Q72 12 76 6" fill="none" stroke="#d9f99d" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 얼굴 -->
+  <path d="M60 18 C84 18 100 36 100 60 C100 84 82 102 60 102 C38 102 20 84 20 60 C20 36 36 18 60 18 Z"
+        fill="#f7fee7" stroke="#65a30d" stroke-width="5"/>
+  <!-- 볼터치 -->
+  <circle cx="38" cy="64" r="6" fill="#d9f99d" opacity="0.9"/>
+  <circle cx="82" cy="64" r="6" fill="#d9f99d" opacity="0.9"/>
+  <!-- 차분한 반달눈 -->
+  <path d="M40 54 Q46 58 52 54" fill="none" stroke="#4d7c0f" stroke-width="4" stroke-linecap="round"/>
+  <path d="M68 54 Q74 58 80 54" fill="none" stroke="#4d7c0f" stroke-width="4" stroke-linecap="round"/>
+  <!-- 살짝 미소 -->
+  <path d="M48 68 Q60 74 72 68" fill="none" stroke="#4d7c0f" stroke-width="4" stroke-linecap="round"/>
+  <!-- 포크 & 스푼 (얌전히 가지런히) -->
+  <g transform="translate(53 95)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#4d7c0f" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-3" y1="-6" x2="-3" y2="-1" stroke="#4d7c0f" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="-6" x2="3" y2="-1" stroke="#4d7c0f" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(67 95)">
+    <line x1="0" y1="-6" x2="0" y2="14" stroke="#4d7c0f" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-8" rx="3.2" ry="4.5" fill="#4d7c0f"/>
+  </g>
+  <!-- i 뱃지 -->
+  <circle cx="94" cy="88" r="17" fill="#65a30d" stroke="#ffffff" stroke-width="3"/>
+  <circle cx="94" cy="79" r="2.8" fill="#ffffff"/>
+  <rect x="91" y="85" width="6" height="13" rx="3" fill="#ffffff"/>
+</svg>
