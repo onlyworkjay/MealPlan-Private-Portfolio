@@ -13,6 +13,7 @@ import MyPage from "./pages/MyPage";
 import WritePage from "./pages/WritePage";
 import WriteViewPage from "./pages/WriteViewPage";
 import WriteModifyPage from "./pages/WriteModifyPage";
+import StatPage from "./pages/StatPage";
 import ScrollToTop from "./components/ScrollToTop";
 import ResetPwPage from "./pages/ResetPwPage";
 
@@ -58,6 +59,7 @@ function AppContent() {
             <MyPage user={user} onLogout={logout} onNavigate={handleNavigate} />
           }
         />
+        <Route path="/mealplan/stats" element={<StatPage />} />
       </Routes>
       <Footer />
     </>

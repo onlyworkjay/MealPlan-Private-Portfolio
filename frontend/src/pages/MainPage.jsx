@@ -119,6 +119,8 @@ const MainPage = () => {
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [sortOrder, setSortOrder] = useState("latest"); // "latest" | "oldest", 기본값 최신순
+  const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 - 현재 페이지
+  const POSTS_PER_PAGE = 10; // 페이지네이션 - 한 페이지당 게시물 수
 
   // 백엔드(/writes)에서 전체 피드 불러옴
   const [posts, setPosts] = useState([]);
@@ -185,13 +187,32 @@ const MainPage = () => {
     return sortOrder === "latest" ? -diff : diff;
   });
 
+  // 검색어/정렬/날짜 필터가 바뀌면 1페이지로 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortOrder, selectedDate]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(sorted.length / POSTS_PER_PAGE));
+  const paginatedPosts = sorted.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE,
+  );
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // 오늘의 통계 계산
   const totalPosts = posts.length;
 
+  // 칼로리(kcal)는 정수가 아닌 소수점 첫째 자리까지 표시
   const avgCalories =
-    totalPosts === 0
-      ? 0
-      : Math.round(posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts);
+  totalPosts === 0
+    ? "0.0"
+    : (posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts).toFixed(1);
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}.${String(
@@ -331,7 +352,7 @@ const MainPage = () => {
               </div>
             ) : (
               <div className={styles.postsGrid}>
-                {sorted.map((post) => (
+                {paginatedPosts.map((post) => (
                   <div
                     className={styles.postCard}
                     key={post.id}
@@ -363,6 +384,44 @@ const MainPage = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* 페이지네이션 - 게시물이 한 페이지 분량(10개)을 초과할 때만 표시 */}
+            {!loading && sorted.length > POSTS_PER_PAGE && (
+              <div className={styles.pagination}>
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  aria-label="이전 페이지"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={[
+                        styles.pageBtn,
+                        page === currentPage ? styles.pageBtnActive : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  aria-label="다음 페이지"
+                >
+                  ›
+                </button>
               </div>
             )}
           </div>
