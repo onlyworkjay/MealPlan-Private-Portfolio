@@ -46,7 +46,13 @@ const FALLBACK_THUMB =
 // 하루 최대 작성 가능 게시물 수
 const DAILY_WRITE_LIMIT = 3;
 
-function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
+// readOnly가 true면 관상용 캘린더 - 모든 날짜 클릭/이동 비활성화 (메인페이지 전용)
+function MiniCalendar({
+  onDateSelect,
+  recordDates = new Set(),
+  selectedDate = null,
+  readOnly = false,
+}) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -102,31 +108,50 @@ function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
           // 오늘보다 미래 날짜인지 체크
           const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
 
+          // 실제 "오늘" 날짜인지
+          const isToday =
+            d === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear();
+
+          // 사용자가 필터로 선택한 날짜인지 (오늘과 별개로 구분)
+          const isSelected = dateKey !== null && dateKey === selectedDate;
+
+          // 클릭이 막혀야 하는 경우: 관상용(readOnly)이거나, 미래거나, 이미 선택된 날짜
+          const isDisabled = readOnly || isFuture || isSelected;
+
           return (
             <div
               key={i}
               className={[
                 styles.miniCalDay,
                 d === null ? styles.otherMonth : "",
-                d === today.getDate() &&
-                month === today.getMonth() &&
-                year === today.getFullYear()
-                  ? styles.today
+                // 선택된 날짜가 있으면 그 날짜만 진하게 파란색, 없으면 기존처럼 오늘이 파란색
+                isSelected ? styles.selectedDay : isToday ? styles.today : "",
+                // 선택된 날짜가 오늘이 아니면, 오늘 자리에 얇은 테두리로 구분 표시
+                isToday && selectedDate && !isSelected
+                  ? styles.todayOutline
                   : "",
                 dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
               style={
-                isFuture
-                  ? {
-                      color: "#cbd5e1",
-                      cursor: "not-allowed",
-                      pointerEvents: "none",
-                    }
-                  : undefined
+                readOnly
+                  ? { cursor: "default", pointerEvents: "none" } // 관상용 - 미래 날짜도 회색 처리하지 않고 그대로 표시
+                  : isFuture
+                    ? {
+                        color: "#cbd5e1",
+                        cursor: "not-allowed",
+                        pointerEvents: "none",
+                      }
+                    : isSelected
+                      ? { cursor: "default", pointerEvents: "none" } // 이미 선택된 날짜는 다시 눌러도 동작 안 함
+                      : undefined
               }
-              onClick={() => dateKey && !isFuture && onDateSelect(dateKey)}
+              onClick={() =>
+                dateKey && !isDisabled && onDateSelect && onDateSelect(dateKey)
+              }
             >
               {d ?? ""}
             </div>
@@ -223,11 +248,6 @@ const MainPage = () => {
     navigate("/mealplan/write");
   };
 
-  // 캘린더에서 날짜를 선택하면, 해당 날짜로 필터링된 전체 피드 페이지로 이동
-  const handleDateSelect = (dateKey) => {
-    navigate(`/feed?date=${dateKey}`);
-  };
-
   // 오늘 날짜 문자열 ("YYYY.MM.DD")
   const today = new Date();
   const todayStr = `${today.getFullYear()}.${String(
@@ -277,27 +297,35 @@ const MainPage = () => {
       : (posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts).toFixed(
           1,
         );
-  const todayCount = todaysPosts.length;
+
+    // "오늘 기록"은 전체 사용자가 아니라 "내가" 오늘 작성한 글 수 (myPosts 기준)
+  const myTodayCount = myPosts.filter(
+    (w) => toDateKey(w.createdAt) === toDateKey(new Date().toISOString()),
+  ).length;
+
+  // 나의 총 칼로리 - myPosts(내가 작성한 전체 게시물) 칼로리 합산
+  const myTotalCalories = myPosts.reduce((sum, w) => sum + w.calories, 0);
 
   return (
     <div className={styles.page}>
-      {!isLoggedIn && (
-        <section className={styles.hero}>
-          <div className={`wrap ${styles.heroInner}`}>
-            <div className={styles.heroBadge}>
-              <span className={styles.heroBadgeDot} />
-              식단 기록 SNS 서비스
-            </div>
-            <h1 className={styles.heroTitle}>
-              먹고 기록하고
-              <br />
-              <em>변화를 확인하세요</em>
-            </h1>
-            <p className={styles.heroDesc}>
-              음식 사진과 칼로리를 기록하고,
-              <br />
-              날짜별 식단 변화와 체중 그래프로 내 몸의 변화를 한눈에 확인하세요.
-            </p>
+      {/* 로그인 여부와 상관없이 항상 노출. 단, 회원가입/로그인 버튼은 비로그인 상태일 때만 표시 */}
+      <section className={styles.hero}>
+        <div className={`wrap ${styles.heroInner}`}>
+          <div className={styles.heroBadge}>
+            <span className={styles.heroBadgeDot} />
+            식단 기록 SNS 서비스 MealPlan
+          </div>
+          <h1 className={styles.heroTitle}>
+            먹고 기록하고
+            <br />
+            <em>변화를 확인하세요</em>
+          </h1>
+          <p className={styles.heroDesc}>
+            음식 사진과 칼로리를 기록하고,
+            <br />
+            날짜별 식단 변화와 체중 그래프로 내 몸의 변화를 한눈에 확인하세요.
+          </p>
+          {!isLoggedIn && (
             <div className={styles.heroBtns}>
               <button
                 className="btn btn-primary btn-lg"
@@ -312,34 +340,34 @@ const MainPage = () => {
                 로그인
               </button>
             </div>
-            <div className={styles.heroCards}>
-              {[
-                {
-                  icon: "📸",
-                  title: "사진으로 기록",
-                  desc: "최대 4장까지 업로드. JPG·PNG·WEBP 지원",
-                },
-                {
-                  icon: "🔥",
-                  title: "칼로리 추적",
-                  desc: "매 끼니 칼로리를 직접 입력해 관리",
-                },
-                {
-                  icon: "📊",
-                  title: "변화 시각화",
-                  desc: "체중 그래프 + 사진 슬라이드로 확인",
-                },
-              ].map((c) => (
-                <div className={styles.heroCard} key={c.title}>
-                  <div className={styles.heroCardIcon}>{c.icon}</div>
-                  <div className={styles.heroCardTitle}>{c.title}</div>
-                  <div className={styles.heroCardDesc}>{c.desc}</div>
-                </div>
-              ))}
-            </div>
+          )}
+          <div className={styles.heroCards}>
+            {[
+              {
+                icon: "📸",
+                title: "사진으로 기록",
+                desc: "최대 4장까지 업로드. JPG·PNG·WEBP 지원",
+              },
+              {
+                icon: "🔥",
+                title: "칼로리 추적",
+                desc: "매 끼니 칼로리를 직접 입력해 관리",
+              },
+              {
+                icon: "📊",
+                title: "변화 시각화",
+                desc: "체중 그래프 + 사진 슬라이드로 확인",
+              },
+            ].map((c) => (
+              <div className={styles.heroCard} key={c.title}>
+                <div className={styles.heroCardIcon}>{c.icon}</div>
+                <div className={styles.heroCardTitle}>{c.title}</div>
+                <div className={styles.heroCardDesc}>{c.desc}</div>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       <div className="wrap">
         <div className={styles.feedLayout}>
@@ -482,18 +510,17 @@ const MainPage = () => {
 
           <aside className={styles.sidebar}>
             <div className={styles.sidebarCard}>
-              <div className={styles.sidebarTitle}>📅 날짜별 보기</div>
-              <MiniCalendar
-                onDateSelect={handleDateSelect}
-                recordDates={myDates}
-              />
+              <div className={styles.sidebarTitle}>📅 달력 </div>
+              {/* 메인페이지 캘린더는 관상용 - 클릭/페이지 이동 전부 비활성화 */}
+              <MiniCalendar recordDates={myDates} readOnly />
             </div>
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📊 오늘의 통계</div>
               {[
-                { label: "총 게시물", val: `${totalPosts}개` },
-                { label: "평균 칼로리", val: `${avgCalories} kcal` },
-                { label: "오늘 기록", val: `${todayCount}개` },
+                { label: "총 피드", val: `${totalPosts}개` },
+                { label: "모든 유저 평균 칼로리", val: `${avgCalories} kcal` },
+                { label: "오늘 내가 올린 피드", val: `${myTodayCount}개` },
+                { label: "나의 총 칼로리", val: `${myTotalCalories} kcal` },
               ].map((s) => (
                 <div className={styles.statRow} key={s.label}>
                   <span className={styles.statLabel}>{s.label}</span>

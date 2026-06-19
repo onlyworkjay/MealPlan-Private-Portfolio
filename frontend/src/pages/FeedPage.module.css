@@ -377,11 +377,16 @@
   overflow: hidden;
 }
 
-/* 사이드바 */
+/* 사이드바 - 스크롤해도 같이 따라다니도록 sticky 적용 */
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: sticky;
+  top: calc(var(--nav-h) + 20px);
+  align-self: start;
+  max-height: calc(100vh - var(--nav-h) - 40px);
+  overflow-y: auto;
 }
 
 .sidebarCard {
@@ -473,6 +478,20 @@
   color: #fff;
   font-weight: 700;
 }
+
+/* 사용자가 필터로 선택한 날짜 - 오늘과 별개로 표시 */
+.selectedDay {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 선택된 날짜가 오늘이 아닐 때, 오늘 자리를 얇은 테두리로 구분 표시 */
+.todayOutline {
+  border: 1.5px solid var(--primary);
+  font-weight: 700;
+}
+
 .hasRecord::after {
   content: "";
   position: absolute;
@@ -484,7 +503,8 @@
   border-radius: 50%;
   background: var(--primary);
 }
-.today::after {
+.today::after,
+.selectedDay::after {
   background: #fff;
 }
 .otherMonth {

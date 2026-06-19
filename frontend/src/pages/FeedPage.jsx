@@ -41,7 +41,7 @@ const FALLBACK_THUMB =
 
 const DAILY_WRITE_LIMIT = 3;
 
-function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
+function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = null }) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -97,16 +97,26 @@ function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
           // 오늘보다 미래 날짜인지 체크
           const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
 
+          // 실제 "오늘" 날짜인지
+          const isToday =
+            d === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear();
+
+          // 사용자가 필터로 선택한 날짜인지 (오늘과 별개로 구분)
+          const isSelected = dateKey !== null && dateKey === selectedDate;
+
           return (
             <div
               key={i}
               className={[
                 styles.miniCalDay,
                 d === null ? styles.otherMonth : "",
-                d === today.getDate() &&
-                month === today.getMonth() &&
-                year === today.getFullYear()
-                  ? styles.today
+                // 선택된 날짜가 있으면 그 날짜만 진하게 파란색, 없으면 기존처럼 오늘이 파란색
+                isSelected ? styles.selectedDay : isToday ? styles.today : "",
+                // 선택된 날짜가 오늘이 아니면, 오늘 자리에 얇은 테두리로 구분 표시
+                isToday && selectedDate && !isSelected
+                  ? styles.todayOutline
                   : "",
                 dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
               ]
@@ -119,9 +129,13 @@ function MiniCalendar({ onDateSelect, recordDates = new Set() }) {
                       cursor: "not-allowed",
                       pointerEvents: "none",
                     }
-                  : undefined
+                  : isSelected
+                    ? { cursor: "default", pointerEvents: "none" } // 이미 선택된 날짜는 다시 눌러도 동작 안 함
+                    : undefined
               }
-              onClick={() => dateKey && !isFuture && onDateSelect(dateKey)}
+              onClick={() =>
+                dateKey && !isFuture && !isSelected && onDateSelect(dateKey)
+              }
             >
               {d ?? ""}
             </div>
@@ -241,22 +255,6 @@ const FeedPage = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const totalPosts = posts.length;
-
-  const avgCalories =
-    totalPosts === 0
-      ? "0.0"
-      : (posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts).toFixed(
-          1,
-        );
-
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}.${String(
-    today.getMonth() + 1,
-  ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
-
-  const todayCount = posts.filter((p) => p.dateOnly === todayStr).length;
 
   return (
     <div className={styles.page}>
@@ -408,20 +406,8 @@ const FeedPage = () => {
               <MiniCalendar
                 onDateSelect={setSelectedDate}
                 recordDates={myDates}
+                selectedDate={selectedDate}
               />
-            </div>
-            <div className={styles.sidebarCard}>
-              <div className={styles.sidebarTitle}>📊 오늘의 통계</div>
-              {[
-                { label: "총 게시물", val: `${totalPosts}개` },
-                { label: "평균 칼로리", val: `${avgCalories} kcal` },
-                { label: "오늘 기록", val: `${todayCount}개` },
-              ].map((s) => (
-                <div className={styles.statRow} key={s.label}>
-                  <span className={styles.statLabel}>{s.label}</span>
-                  <span className={styles.statVal}>{s.val}</span>
-                </div>
-              ))}
             </div>
             {!isLoggedIn && (
               <div className={`${styles.sidebarCard} ${styles.sidebarCta}`}>
