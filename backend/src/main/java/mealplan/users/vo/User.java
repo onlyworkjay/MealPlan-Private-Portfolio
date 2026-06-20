@@ -38,10 +38,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt; // 수정일
 
-    // 참고: 하드 삭제로 전환하면서 더 이상 코드에서 값을 채우지 않음 (남겨두되 비활성 컬럼)
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt; // 탈퇴일 (현재 미사용)
-
     @Column(name = "profile_img", length = 500)
     private String profileImg; // 프로필 이미지 (기본값 없음, null이면 프론트에서 defaultProfile 사용)
 

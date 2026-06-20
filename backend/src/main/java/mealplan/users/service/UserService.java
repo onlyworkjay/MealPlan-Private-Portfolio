@@ -1,5 +1,8 @@
 package mealplan.users.service;
 
+import mealplan.global.util.S3Uploader;
+import mealplan.stat.dao.StatDao;
+import mealplan.stat.vo.Stat;
 import mealplan.users.dao.UserDao;
 import mealplan.users.dto.JoinRequest;
 import mealplan.users.dto.LoginRequest;
@@ -7,16 +10,21 @@ import mealplan.users.dto.LoginResponse;
 import mealplan.users.dto.UserResponse;
 import mealplan.users.util.JwtUtil;
 import mealplan.users.vo.User;
+import mealplan.write.dao.WriteDao;
+import mealplan.write.vo.Write;
+import mealplan.write.vo.WriteImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -27,6 +35,16 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    // 탈퇴 시 작성한 게시물/체중기록까지 함께 정리하기 위해 추가
+    @Autowired
+    private WriteDao writeDao;
+
+    @Autowired
+    private StatDao statDao;
+
+    @Autowired
+    private S3Uploader s3Uploader;
 
     private static final Pattern ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]{6,16}$");
     private static final Pattern PW_PATTERN = Pattern.compile("^[a-zA-Z0-9!@#$%]{8,16}$");
@@ -235,11 +253,41 @@ public class UserService {
         }
     }
 
-    // ⬇️ 수정된 부분: 회원 탈퇴 - 소프트 삭제 대신 행 자체를 완전히 삭제(하드 삭제)
+    // 프로필 사진 파일을 디스크에서 삭제 (탈퇴 시 사용, 실패해도 탈퇴 자체를 막지 않음)
+    private void deleteProfileImageFile(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+        try {
+            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            Files.deleteIfExists(Paths.get(uploadDir, filename));
+        } catch (IOException ignored) {
+        }
+    }
+
+    // 회원 탈퇴 - 하드 삭제로 전환하면서, 작성한 게시물(+S3 사진)과
+    // 체중기록까지 함께 완전히 삭제한 뒤 마지막으로 회원 행 자체를 삭제 (FK 제약 위반 방지)
+    @Transactional
     public void withdraw(Long userId) {
         User user = userDao.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        // 1) 작성한 게시물에 달린 사진을 S3에서 먼저 제거
+        List<Write> writes = writeDao.findByUserIdOrderByCreatedAtDesc(userId);
+        for (Write write : writes) {
+            for (WriteImage img : write.getImages()) {
+                s3Uploader.delete(img.getImageUrl());
+            }
+        }
+        // cascade=ALL, orphanRemoval=true 설정으로 write_images row들도 함께 삭제됨
+        writeDao.deleteAll(writes);
+
+        // 2) 체중 기록 삭제
+        List<Stat> stats = statDao.findByUserIdOrderByDateAsc(userId);
+        statDao.deleteAll(stats);
+
+        // 3) 프로필 사진 파일 삭제 (로컬 디스크)
+        deleteProfileImageFile(user.getProfileImg());
+
+        // 4) 마지막으로 회원 행 자체를 완전히 삭제
         userDao.delete(user);
     }
 }
