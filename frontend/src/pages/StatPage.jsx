@@ -29,13 +29,6 @@ const StatPage = () => {
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
 
-  // 비로그인 상태로 URL 직접 접근하는 경우 로그인 페이지로 이동
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/users/login");
-    }
-  }, [isLoggedIn, navigate]);
-
   // 체중 변화 그래프 데이터
   const [stats, setStats] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -105,17 +98,25 @@ const StatPage = () => {
   }, [isLoggedIn, token]);
 
   // 그래프에 넘길 데이터 - 날짜를 "M.D" 형식으로 짧게 표시
-  const chartData = useMemo(
-    () =>
-      stats.map((s) => {
-        const [, m, d] = s.date.split("-");
+  // 같은 날짜에 여러 건을 입력했다면 "마지막 값 기준"으로 한 점만 사용
+  const chartData = useMemo(() => {
+    const lastWeightByDate = new Map();
+    // stats가 입력된 순서(오래된 → 최근) 그대로라고 가정 - Map.set은 같은 키를 다시 쓰면
+    // 값을 덮어쓰므로, 같은 날짜를 여러 번 거치면 자연히 "마지막 입력값"이 남게 됨
+    stats.forEach((s) => {
+      lastWeightByDate.set(s.date, s.weight);
+    });
+
+    return Array.from(lastWeightByDate.entries())
+      .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+      .map(([date, weight]) => {
+        const [, m, d] = date.split("-");
         return {
           date: `${Number(m)}.${Number(d)}`,
-          weight: s.weight,
+          weight,
         };
-      }),
-    [stats],
-  );
+      });
+  }, [stats]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -149,7 +150,33 @@ const StatPage = () => {
 
   const currentSlide = photoEntries[slideIndex];
 
-  if (!isLoggedIn) return null;
+  // 비로그인 상태 - 통계 페이지는 내 기록 기반이므로 로그인 안내 화면만 표시 (다른 페이지로 강제 이동시키지 않음)
+  if (!isLoggedIn) {
+    return (
+      <div className={styles.page}>
+        <div className={`wrap ${styles.loginGate}`}>
+          <div className={styles.pageHeader}>
+            <h1>통계</h1>
+            <p>체중 변화와 식단 기록을 한눈에 확인해 보세요</p>
+          </div>
+          <div className={styles.lockEmpty}>
+            <div className={styles.lockEmptyIcon}>🔒</div>
+            <div className={styles.lockEmptyTitle}>로그인이 필요해요</div>
+            <div className={styles.lockEmptySub}>
+              로그인 후 체중 변화 그래프와 식단 기록을 확인할 수 있어요
+            </div>
+            <button
+              className="btn btn-primary btn-sm"
+              style={{ marginTop: 16 }}
+              onClick={() => navigate("/users/login")}
+            >
+              로그인 하러 가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

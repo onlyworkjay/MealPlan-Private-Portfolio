@@ -409,7 +409,7 @@ const CalendarPage = () => {
   if (!isLoggedIn) {
     return (
       <div className={styles.page}>
-        <div className="wrap">
+        <div className={`wrap ${styles.loginGate}`}>
           <div className={styles.pageHeader}>
             <h1>날짜별 조회</h1>
             <p>내가 기록한 식단을 날짜별로 확인해 보세요</p>

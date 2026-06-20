@@ -5,7 +5,7 @@
 }
 
 .pageHeader {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .pageHeader h1 {
@@ -17,6 +17,32 @@
 .pageHeader p {
   font-size: 14px;
   color: var(--text-sub);
+}
+
+/* 비로그인 안내 화면 (통계는 로그인 전용) - 날짜별 조회 페이지와 동일한 톤으로 통일 */
+.loginGate {
+  padding-top: 16px;
+}
+
+.lockEmpty {
+  text-align: center;
+  padding: 64px 0;
+  color: var(--text-light);
+}
+
+.lockEmptyIcon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.lockEmptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lockEmptySub {
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 .grid {

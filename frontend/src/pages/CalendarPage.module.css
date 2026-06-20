@@ -11,6 +11,11 @@
   padding: 32px 0 64px;
 }
 
+/* 비로그인 안내 화면 (날짜별 조회는 로그인 전용) - 상하 여백을 넉넉히 줘서 답답해 보이지 않게 함 */
+.loginGate {
+  padding: 48px 0 96px;
+}
+
 /* 검색 / 필터 바 */
 .feedToolbar {
   display: flex;
@@ -392,7 +397,7 @@
   font-weight: 700;
 }
 
-/* 사용자가 선택한 날짜 - 오늘과 별개로 표시 */
+/* 사용자가 선택한 날짜 - 오늘과 다른 색상으로 구분 */
 .selectedDay {
   background: var(--primary-dark);
   color: #fff;

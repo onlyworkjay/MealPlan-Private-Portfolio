@@ -11,8 +11,6 @@ const NAV_LINKS = [
   { label: "통계", href: "/mealplan/stats" },
 ];
 
-const PUBLIC_NAV_LINKS = NAV_LINKS.filter((link) => link.label !== "통계");
-
 const formatRemaining = (sec) => {
   if (sec === null || sec === undefined) return "";
   const m = Math.floor(sec / 60);
@@ -26,7 +24,8 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = isLoggedIn ? NAV_LINKS : PUBLIC_NAV_LINKS;
+  // 비로그인 상태에서도 "통계" 메뉴를 동일하게 노출
+  const navLinks = NAV_LINKS;
   const timerWarning =
     remainingSeconds !== null &&
     remainingSeconds !== undefined &&
