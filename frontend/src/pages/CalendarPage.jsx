@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import styles from "./FeedPage.module.css";
-import logo from "../assets/logo.svg";
+import styles from "./CalendarPage.module.css";
 import defaultProfile from "../assets/default-profile.svg";
 import { useAuth } from "../contexts/AuthContext";
 import { showSwal } from "../utils/SwalAlert";
@@ -46,7 +45,8 @@ const MONTH_LABELS = [
   "7월", "8월", "9월", "10월", "11월", "12월",
 ];
 
-// 제목(연/월) 클릭 시 연도 선택 → 월 선택 화면으로 빠르게 이동 가능. 미래 연/월/날짜는 비활성화
+// 날짜별 조회 페이지 캘린더 - 날짜 클릭 가능, 미래 날짜/연/월은 비활성화(회색 처리)
+// 제목(연/월) 클릭 시 연도 선택 → 월 선택 화면으로 빠르게 이동 가능
 function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = null }) {
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -81,7 +81,7 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
   };
 
   const years = Array.from({ length: 12 }, (_, i) => yearRangeStart + i);
-  // 다음 구간 전체가 미래(올해 초과)면 더 넘어갈 수 없음
+  // 다음 구간 전체가 미래(2026년 초과)면 더 넘어갈 수 없음
   const canGoNextDecade = yearRangeStart + 12 <= todayYear;
 
   const prevDecade = () => setYearRangeStart((s) => s - 12);
@@ -237,7 +237,7 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
               ? `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
               : null;
 
-            // 오늘보다 미래 날짜인지 체크
+            // 오늘보다 미래 날짜인지 체크 - 미래는 클릭 불가 + 회색 처리
             const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
 
             // 실제 "오늘" 날짜인지
@@ -246,7 +246,7 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
               month === todayMonth &&
               year === todayYear;
 
-            // 사용자가 필터로 선택한 날짜인지 (오늘과 별개로 구분)
+            // 사용자가 선택한 날짜인지 (오늘과 별개로 구분)
             const isSelected = dateKey !== null && dateKey === selectedDate;
 
             return (
@@ -261,6 +261,7 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
                   isToday && selectedDate && !isSelected
                     ? styles.todayOutline
                     : "",
+                  // 내가 게시물을 올린 날짜에 점 표시
                   dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
                 ]
                   .filter(Boolean)
@@ -290,28 +291,39 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
   );
 }
 
-const FeedPage = () => {
+const CalendarPage = () => {
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
-  // 메인페이지(오늘의 피드) 캘린더에서 날짜를 선택해 들어온 경우, URL의 ?date= 값으로 초기 필터링
-  const [selectedDate, setSelectedDate] = useState(searchParams.get("date"));
+  // 캘린더에서 선택한 날짜 - 페이지 진입 시 기본값은 "오늘"로 설정해 오늘 올라온 피드만 보여줌
+  // (null이면 필터 없이 내가 올린 전체 게시물을 보여줌 - 초기화 버튼 클릭 시 이 상태가 됨)
+  const [selectedDate, setSelectedDate] = useState(() =>
+    toDateKey(new Date().toISOString()),
+  );
   const [sortOrder, setSortOrder] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
+  // 가로 2열 x 세로 5행 = 한 페이지 최대 10개
   const POSTS_PER_PAGE = 10;
   // 초기화 버튼 클릭 시 값을 바꿔서 MiniCalendar를 강제로 리마운트 -> 오늘 연/월, 날짜 화면으로 리셋
   const [calendarKey, setCalendarKey] = useState(0);
 
-  const [posts, setPosts] = useState([]);
+  // 이 페이지는 "내가 올린 게시물만 조회"하는 페이지이므로 /writes/my만 사용
+  const [myPosts, setMyPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [myPosts, setMyPosts] = useState([]);
-
   useEffect(() => {
+    if (!isLoggedIn || !token) {
+      setMyPosts([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     axios
-      .get(`${import.meta.env.VITE_BACKSERVER}/writes`)
+      .get(`${import.meta.env.VITE_BACKSERVER}/writes/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => {
         const mapped = res.data.map((w) => ({
           id: w.writeId,
@@ -326,33 +338,15 @@ const FeedPage = () => {
           images: w.imageUrls?.length ?? 0,
           thumb: w.imageUrls?.[0] ?? FALLBACK_THUMB,
         }));
-        setPosts(mapped);
-      })
-      .catch(() => {
-        setPosts([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!isLoggedIn || !token) {
-      setMyPosts([]);
-      return;
-    }
-
-    axios
-      .get(`${import.meta.env.VITE_BACKSERVER}/writes/my`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setMyPosts(res.data);
+        setMyPosts(mapped);
       })
       .catch(() => {
         setMyPosts([]);
-      });
+      })
+      .finally(() => setLoading(false));
   }, [isLoggedIn, token]);
 
-  // 내가 올린 게시물만 달력에 점이 찍힘
+  // 캘린더에 점 찍을 날짜 - 내가 게시물을 올린 날짜
   const myDates = new Set(myPosts.map((w) => toDateKey(w.createdAt)));
 
   const handleWriteClick = () => {
@@ -374,7 +368,8 @@ const FeedPage = () => {
     navigate("/mealplan/write");
   };
 
-  const filtered = posts.filter(
+  // 검색 + 날짜 필터 (selectedDate가 있으면 해당 날짜 게시물만, 없으면 내 전체 게시물)
+  const filtered = myPosts.filter(
     (p) =>
       (!search ||
         p.title.includes(search) ||
@@ -403,12 +398,40 @@ const FeedPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 초기화 버튼 - 오늘 날짜로 돌아가고, 오늘 등록된 게시물이 있으면 모두 보여줌
+  // 초기화 버튼 - 날짜 필터를 완전히 해제해서 전체 피드(내 전체 게시물)를 보여주고,
+  // 캘린더도 오늘이 속한 연/월·날짜 화면으로 되돌림
   const handleResetCalendar = () => {
-    const todayKey = toDateKey(new Date().toISOString());
-    setSelectedDate(todayKey);
+    setSelectedDate(null);
     setCalendarKey((k) => k + 1); // MiniCalendar를 리마운트해서 오늘 연/월·날짜 화면으로 리셋
   };
+
+  // 비로그인 상태 - 내 게시물 조회 페이지이므로 로그인 안내만 표시
+  if (!isLoggedIn) {
+    return (
+      <div className={styles.page}>
+        <div className="wrap">
+          <div className={styles.pageHeader}>
+            <h1>날짜별 조회</h1>
+            <p>내가 기록한 식단을 날짜별로 확인해 보세요</p>
+          </div>
+          <div className={styles.postsEmpty}>
+            <div className={styles.postsEmptyIcon}>🔒</div>
+            <div className={styles.postsEmptyTitle}>로그인이 필요해요</div>
+            <div className={styles.postsEmptySub}>
+              로그인 후 내가 기록한 식단을 날짜별로 확인할 수 있어요
+            </div>
+            <button
+              className="btn btn-primary btn-sm"
+              style={{ marginTop: 16 }}
+              onClick={() => navigate("/users/login")}
+            >
+              로그인 하러 가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -416,8 +439,8 @@ const FeedPage = () => {
         <div className={styles.feedLayout}>
           <div>
             <div className={styles.pageHeader}>
-              <h1>전체 피드</h1>
-              <p>모든 사용자의 식단 기록을 확인해 보세요</p>
+              <h1>날짜별 조회</h1>
+              <p>내가 기록한 식단을 날짜별로 확인해 보세요</p>
             </div>
             <div className={styles.feedToolbar}>
               <div className={styles.searchBox}>
@@ -452,31 +475,36 @@ const FeedPage = () => {
                   📅 {selectedDate} ×
                 </button>
               )}
-              {isLoggedIn && (
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={handleWriteClick}
-                >
-                  ✏️ 기록하기
-                </button>
-              )}
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleWriteClick}
+              >
+                ✏️ 기록하기
+              </button>
             </div>
+
             {loading ? (
               <div className={styles.postsEmpty}>
                 <div className={styles.postsEmptyTitle}>불러오는 중...</div>
               </div>
             ) : sorted.length === 0 ? (
               <div className={styles.postsEmpty}>
-                <div className={styles.postsEmptyIcon}>🔍</div>
+                <div className={styles.postsEmptyIcon}>
+                  {selectedDate ? "🍽️" : "🔍"}
+                </div>
                 <div className={styles.postsEmptyTitle}>
-                  {posts.length === 0
-                    ? "아직 등록된 식단 기록이 없어요"
-                    : "검색 결과가 없어요"}
+                  {myPosts.length === 0
+                    ? "아직 기록한 식단이 없어요"
+                    : selectedDate
+                      ? "선택한 날짜에 기록이 없어요"
+                      : "검색 결과가 없어요"}
                 </div>
                 <div className={styles.postsEmptySub}>
-                  {posts.length === 0
-                    ? "가장 먼저 식단을 기록해보세요"
-                    : "다른 키워드로 검색해 보세요"}
+                  {myPosts.length === 0
+                    ? "기록하기 버튼으로 첫 식단을 남겨보세요"
+                    : selectedDate
+                      ? "다른 날짜를 선택해 보세요"
+                      : "다른 키워드로 검색해 보세요"}
                 </div>
               </div>
             ) : (
@@ -516,6 +544,7 @@ const FeedPage = () => {
               </div>
             )}
 
+            {/* 페이지네이션 - 가로 2열 x 세로 5행(10개) 초과 시에만 표시 */}
             {!loading && sorted.length > POSTS_PER_PAGE && (
               <div className={styles.pagination}>
                 <button
@@ -573,23 +602,6 @@ const FeedPage = () => {
                 selectedDate={selectedDate}
               />
             </div>
-            {!isLoggedIn && (
-              <div className={`${styles.sidebarCard} ${styles.sidebarCta}`}>
-                <div className={styles.sidebarCtaIcon}>
-                  <img src={logo} alt="MealPlan 로고" />
-                </div>
-                <div className={styles.sidebarCtaTitle}>지금 시작하세요!</div>
-                <div className={styles.sidebarCtaDesc}>
-                  회원가입 후 나만의 식단을 기록해보세요
-                </div>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => navigate("/users/join")}
-                >
-                  회원 가입하기
-                </button>
-              </div>
-            )}
           </aside>
         </div>
       </div>
@@ -597,4 +609,4 @@ const FeedPage = () => {
   );
 };
 
-export default FeedPage;
+export default CalendarPage;

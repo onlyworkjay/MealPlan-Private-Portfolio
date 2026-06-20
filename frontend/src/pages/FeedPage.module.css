@@ -396,13 +396,43 @@
   padding: 20px;
 }
 
-.sidebarTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
+/* 캘린더 카드 타이틀 줄 - 제목 + 초기화 버튼 */
+.calendarTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+.calendarTitleText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.resetBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-full);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all var(--ease);
+}
+
+.resetBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--primary-soft);
 }
 
 .sidebarCta {
@@ -450,6 +480,49 @@
 .miniCalNav:hover {
   background: var(--primary-soft);
 }
+.miniCalNav:disabled {
+  cursor: not-allowed;
+}
+
+/* 연/월 헤더 제목 - 클릭하면 연도 선택 화면으로 이동 */
+.miniCalTitle {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 8px;
+  transition: background var(--ease);
+}
+.miniCalTitle:hover {
+  background: var(--primary-soft);
+}
+
+/* 연도/월 선택 그리드 (4열 x 3행) */
+.miniCalPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.miniCalPickerCell {
+  font-size: 13px;
+  padding: 10px 4px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--ease);
+}
+.miniCalPickerCell:hover {
+  background: var(--primary-soft);
+}
+.miniCalPickerCurrent {
+  border: 1.5px solid var(--primary);
+  font-weight: 700;
+}
+.miniCalPickerSelected {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
 .miniCalGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

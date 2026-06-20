@@ -15,6 +15,7 @@ import WritePage from "./pages/WritePage";
 import WriteViewPage from "./pages/WriteViewPage";
 import WriteModifyPage from "./pages/WriteModifyPage";
 import StatPage from "./pages/StatPage";
+import CalendarPage from "./pages/CalendarPage";
 import ScrollToTop from "./components/ScrollToTop";
 import ResetPwPage from "./pages/ResetPwPage";
 
@@ -55,6 +56,7 @@ function AppContent() {
           path="/mealplan/write-modify/:writeId"
           element={<WriteModifyPage />}
         />
+        <Route path="/mealplan/calendar" element={<CalendarPage />} />
         <Route
           path="/mypage"
           element={

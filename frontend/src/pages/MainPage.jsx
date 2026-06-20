@@ -46,7 +46,13 @@ const FALLBACK_THUMB =
 // 하루 최대 작성 가능 게시물 수
 const DAILY_WRITE_LIMIT = 3;
 
+const MONTH_LABELS = [
+  "1월", "2월", "3월", "4월", "5월", "6월",
+  "7월", "8월", "9월", "10월", "11월", "12월",
+];
+
 // readOnly가 true면 관상용 캘린더 - 모든 날짜 클릭/이동 비활성화 (메인페이지 전용)
+// 제목(연/월) 클릭 시 연도 선택 → 월 선택 화면으로 빠르게 이동 가능 (관상용이라 보기 전용)
 function MiniCalendar({
   onDateSelect,
   recordDates = new Set(),
@@ -54,19 +60,21 @@ function MiniCalendar({
   readOnly = false,
 }) {
   const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+
+  const [year, setYear] = useState(todayYear);
+  const [month, setMonth] = useState(todayMonth);
+  // "days" | "years" | "months" - 제목 클릭으로 연/월 선택 화면으로 전환
+  const [viewMode, setViewMode] = useState("days");
+  const [yearRangeStart, setYearRangeStart] = useState(todayYear - 5);
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
   // 오늘 자정 기준 - 이 시점 이후 날짜는 미래로 판단
-  const todayMidnight = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  );
+  const todayMidnight = new Date(todayYear, todayMonth, today.getDate());
 
   const prevMonth = () =>
     month === 0
@@ -77,6 +85,39 @@ function MiniCalendar({
       ? (setYear((y) => y + 1), setMonth(0))
       : setMonth((m) => m + 1);
 
+  // 제목 클릭 - 현재 보고 있는 연도를 중심으로 연도 선택 화면 오픈
+  const openYearPicker = () => {
+    setYearRangeStart(Math.min(year, todayYear) - 5);
+    setViewMode("years");
+  };
+
+  const years = Array.from({ length: 12 }, (_, i) => yearRangeStart + i);
+  // 다음 구간 전체가 미래(올해 초과)면 더 넘어갈 수 없음
+  const canGoNextDecade = yearRangeStart + 12 <= todayYear;
+
+  const prevDecade = () => setYearRangeStart((s) => s - 12);
+  const nextDecade = () => {
+    if (canGoNextDecade) setYearRangeStart((s) => s + 12);
+  };
+
+  const selectYear = (y) => {
+    if (y > todayYear) return; // 미래 연도는 선택 불가
+    setYear(y);
+    setViewMode("months");
+  };
+
+  const canGoNextYear = year + 1 <= todayYear;
+  const prevYearNav = () => setYear((y) => y - 1);
+  const nextYearNav = () => {
+    if (canGoNextYear) setYear((y) => y + 1);
+  };
+
+  const selectMonth = (m) => {
+    if (year === todayYear && m > todayMonth) return; // 올해의 미래 월은 선택 불가
+    setMonth(m);
+    setViewMode("days");
+  };
+
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -84,80 +125,183 @@ function MiniCalendar({
   return (
     <div>
       <div className={styles.miniCalHeader}>
-        <button className={styles.miniCalNav} onClick={prevMonth}>
-          ‹
-        </button>
-        <span>
-          {year}년 {month + 1}월
-        </span>
-        <button className={styles.miniCalNav} onClick={nextMonth}>
-          ›
-        </button>
-      </div>
-      <div className={styles.miniCalGrid}>
-        {DAY_LABELS.map((d) => (
-          <div className={styles.miniCalDayLabel} key={d}>
-            {d}
-          </div>
-        ))}
-        {cells.map((d, i) => {
-          const dateKey = d
-            ? `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
-            : null;
-
-          // 오늘보다 미래 날짜인지 체크
-          const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
-
-          // 실제 "오늘" 날짜인지
-          const isToday =
-            d === today.getDate() &&
-            month === today.getMonth() &&
-            year === today.getFullYear();
-
-          // 사용자가 필터로 선택한 날짜인지 (오늘과 별개로 구분)
-          const isSelected = dateKey !== null && dateKey === selectedDate;
-
-          // 클릭이 막혀야 하는 경우: 관상용(readOnly)이거나, 미래거나, 이미 선택된 날짜
-          const isDisabled = readOnly || isFuture || isSelected;
-
-          return (
-            <div
-              key={i}
-              className={[
-                styles.miniCalDay,
-                d === null ? styles.otherMonth : "",
-                // 선택된 날짜가 있으면 그 날짜만 진하게 파란색, 없으면 기존처럼 오늘이 파란색
-                isSelected ? styles.selectedDay : isToday ? styles.today : "",
-                // 선택된 날짜가 오늘이 아니면, 오늘 자리에 얇은 테두리로 구분 표시
-                isToday && selectedDate && !isSelected
-                  ? styles.todayOutline
-                  : "",
-                dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={
-                readOnly
-                  ? { cursor: "default", pointerEvents: "none" } // 관상용 - 미래 날짜도 회색 처리하지 않고 그대로 표시
-                  : isFuture
-                    ? {
-                        color: "#cbd5e1",
-                        cursor: "not-allowed",
-                        pointerEvents: "none",
-                      }
-                    : isSelected
-                      ? { cursor: "default", pointerEvents: "none" } // 이미 선택된 날짜는 다시 눌러도 동작 안 함
-                      : undefined
-              }
-              onClick={() =>
-                dateKey && !isDisabled && onDateSelect && onDateSelect(dateKey)
-              }
+        {viewMode === "days" && (
+          <>
+            <button className={styles.miniCalNav} onClick={prevMonth}>
+              ‹
+            </button>
+            <span
+              className={styles.miniCalTitle}
+              onClick={openYearPicker}
+              title="연도/월 바로 가기"
             >
-              {d ?? ""}
-            </div>
-          );
-        })}
+              {year}년 {month + 1}월
+            </span>
+            <button className={styles.miniCalNav} onClick={nextMonth}>
+              ›
+            </button>
+          </>
+        )}
+        {viewMode === "years" && (
+          <>
+            <button className={styles.miniCalNav} onClick={prevDecade}>
+              ‹
+            </button>
+            <span>
+              {years[0]}년 - {years[years.length - 1]}년
+            </span>
+            <button
+              className={styles.miniCalNav}
+              onClick={nextDecade}
+              disabled={!canGoNextDecade}
+              style={!canGoNextDecade ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+            >
+              ›
+            </button>
+          </>
+        )}
+        {viewMode === "months" && (
+          <>
+            <button className={styles.miniCalNav} onClick={prevYearNav}>
+              ‹
+            </button>
+            <span>{year}년</span>
+            <button
+              className={styles.miniCalNav}
+              onClick={nextYearNav}
+              disabled={!canGoNextYear}
+              style={!canGoNextYear ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+            >
+              ›
+            </button>
+          </>
+        )}
       </div>
+
+      {viewMode === "years" && (
+        <div className={styles.miniCalPickerGrid}>
+          {years.map((y) => {
+            const isFutureYear = y > todayYear;
+            return (
+              <div
+                key={y}
+                className={[
+                  styles.miniCalPickerCell,
+                  y === todayYear ? styles.miniCalPickerCurrent : "",
+                  y === year ? styles.miniCalPickerSelected : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={
+                  isFutureYear
+                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    : undefined
+                }
+                onClick={() => selectYear(y)}
+              >
+                {y}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {viewMode === "months" && (
+        <div className={styles.miniCalPickerGrid}>
+          {MONTH_LABELS.map((label, i) => {
+            const isFutureMonth = year === todayYear && i > todayMonth;
+            return (
+              <div
+                key={label}
+                className={[
+                  styles.miniCalPickerCell,
+                  year === todayYear && i === todayMonth
+                    ? styles.miniCalPickerCurrent
+                    : "",
+                  i === month ? styles.miniCalPickerSelected : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={
+                  isFutureMonth
+                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    : undefined
+                }
+                onClick={() => selectMonth(i)}
+              >
+                {label}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {viewMode === "days" && (
+        <div className={styles.miniCalGrid}>
+          {DAY_LABELS.map((d) => (
+            <div className={styles.miniCalDayLabel} key={d}>
+              {d}
+            </div>
+          ))}
+          {cells.map((d, i) => {
+            const dateKey = d
+              ? `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
+              : null;
+
+            // 오늘보다 미래 날짜인지 체크
+            const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
+
+            // 실제 "오늘" 날짜인지
+            const isToday =
+              d === today.getDate() &&
+              month === todayMonth &&
+              year === todayYear;
+
+            // 사용자가 필터로 선택한 날짜인지 (오늘과 별개로 구분)
+            const isSelected = dateKey !== null && dateKey === selectedDate;
+
+            // 클릭이 막혀야 하는 경우: 관상용(readOnly)이거나, 미래거나, 이미 선택된 날짜
+            const isDisabled = readOnly || isFuture || isSelected;
+
+            return (
+              <div
+                key={i}
+                className={[
+                  styles.miniCalDay,
+                  d === null ? styles.otherMonth : "",
+                  // 선택된 날짜가 있으면 그 날짜만 진하게 파란색, 없으면 기존처럼 오늘이 파란색
+                  isSelected ? styles.selectedDay : isToday ? styles.today : "",
+                  // 선택된 날짜가 오늘이 아니면, 오늘 자리에 얇은 테두리로 구분 표시
+                  isToday && selectedDate && !isSelected
+                    ? styles.todayOutline
+                    : "",
+                  dateKey && recordDates.has(dateKey) ? styles.hasRecord : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={
+                  readOnly
+                    ? { cursor: "default", pointerEvents: "none" } // 관상용 - 미래 날짜도 회색 처리하지 않고 그대로 표시
+                    : isFuture
+                      ? {
+                          color: "#cbd5e1",
+                          cursor: "not-allowed",
+                          pointerEvents: "none",
+                        }
+                      : isSelected
+                        ? { cursor: "default", pointerEvents: "none" } // 이미 선택된 날짜는 다시 눌러도 동작 안 함
+                        : undefined
+                }
+                onClick={() =>
+                  dateKey && !isDisabled && onDateSelect && onDateSelect(dateKey)
+                }
+              >
+                {d ?? ""}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -178,8 +322,11 @@ const MainPage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 캘린더 점 표시 + 일일 작성 횟수 체크용 - 로그인한 내가 작성한 게시물 원본 데이터 보관
+  // 일일 작성 횟수 체크용 - 로그인한 내가 작성한 게시물 원본 데이터 보관
   const [myPosts, setMyPosts] = useState([]);
+
+  // 초기화 버튼 클릭 시 값을 바꿔서 MiniCalendar를 강제로 리마운트 -> 오늘 연/월, 날짜 화면으로 리셋
+  const [calendarKey, setCalendarKey] = useState(0);
 
   useEffect(() => {
     axios
@@ -206,7 +353,7 @@ const MainPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // 캘린더 점 + 일일 작성 횟수는 "내가 올린 기록"만 반영 - /writes/my를 그대로 재사용
+  // 일일 작성 횟수는 "내가 올린 기록"만 반영 - /writes/my를 그대로 재사용
   useEffect(() => {
     if (!isLoggedIn || !token) {
       setMyPosts([]);
@@ -224,9 +371,6 @@ const MainPage = () => {
         setMyPosts([]);
       });
   }, [isLoggedIn, token]);
-
-  // 캘린더에 점 찍을 날짜 Set은 myPosts로부터 파생
-  const myDates = new Set(myPosts.map((w) => toDateKey(w.createdAt)));
 
   // 기록하기 버튼 클릭 시 - 오늘 작성한 게시물 수가 제한(3개)을 넘으면 작성 페이지 진입 차단
   const handleWriteClick = () => {
@@ -289,22 +433,31 @@ const MainPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 사이드바 통계 (전체 게시물 기준)
-  const totalPosts = posts.length;
+  // 초기화 버튼 - 캘린더를 오늘이 속한 연/월, 날짜 화면으로 되돌림 (관상용 캘린더이므로 별도 필터링은 없음)
+  const handleResetCalendar = () => {
+    setCalendarKey((k) => k + 1);
+  };
+
+  // 사이드바 통계 ("오늘의 통계"이므로 오늘 작성된 피드 기준으로 계산)
+  const totalPosts = todaysPosts.length;
   const avgCalories =
     totalPosts === 0
-      ? "0.0"
-      : (posts.reduce((sum, p) => sum + p.calories, 0) / totalPosts).toFixed(
-          1,
-        );
+      ? "0"
+      : (
+          todaysPosts.reduce((sum, p) => sum + p.calories, 0) / totalPosts
+        ).toFixed(1);
 
-    // "오늘 기록"은 전체 사용자가 아니라 "내가" 오늘 작성한 글 수 (myPosts 기준)
+  // "오늘 기록"은 전체 사용자가 아니라 "내가" 오늘 작성한 글 수 (myPosts 기준)
   const myTodayCount = myPosts.filter(
     (w) => toDateKey(w.createdAt) === toDateKey(new Date().toISOString()),
   ).length;
 
-  // 나의 총 칼로리 - myPosts(내가 작성한 전체 게시물) 칼로리 합산
-  const myTotalCalories = myPosts.reduce((sum, w) => sum + w.calories, 0);
+  // 오늘 나의 칼로리 - "오늘의 통계" 섹션이므로 오늘 작성한 게시물만 합산
+  const myTodayCalories = myPosts
+    .filter(
+      (w) => toDateKey(w.createdAt) === toDateKey(new Date().toISOString()),
+    )
+    .reduce((sum, w) => sum + w.calories, 0);
 
   return (
     <div className={styles.page}>
@@ -510,17 +663,20 @@ const MainPage = () => {
 
           <aside className={styles.sidebar}>
             <div className={styles.sidebarCard}>
-              <div className={styles.sidebarTitle}>📅 달력 </div>
-              {/* 메인페이지 캘린더는 관상용 - 클릭/페이지 이동 전부 비활성화 */}
-              <MiniCalendar recordDates={myDates} readOnly />
+              <div className={styles.calendarTitleRow}>
+                <div className={styles.calendarTitleText}>📅 달력</div>
+               
+              </div>
+              {/* 메인페이지 캘린더는 관상용 - 클릭/페이지 이동 전부 비활성화, 기록 점 표시도 안 함 */}
+              <MiniCalendar key={calendarKey} readOnly />
             </div>
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>📊 오늘의 통계</div>
               {[
                 { label: "총 피드", val: `${totalPosts}개` },
                 { label: "모든 유저 평균 칼로리", val: `${avgCalories} kcal` },
-                { label: "오늘 내가 올린 피드", val: `${myTodayCount}개` },
-                { label: "나의 총 칼로리", val: `${myTotalCalories} kcal` },
+                { label: "내가 올린 피드", val: `${myTodayCount}개` },
+                { label: "나의 칼로리", val: `${myTodayCalories} kcal` },
               ].map((s) => (
                 <div className={styles.statRow} key={s.label}>
                   <span className={styles.statLabel}>{s.label}</span>
@@ -528,23 +684,6 @@ const MainPage = () => {
                 </div>
               ))}
             </div>
-            {!isLoggedIn && (
-              <div className={`${styles.sidebarCard} ${styles.sidebarCta}`}>
-                <div className={styles.sidebarCtaIcon}>
-                  <img src={logo} alt="MealPlan 로고" />
-                </div>
-                <div className={styles.sidebarCtaTitle}>지금 시작하세요!</div>
-                <div className={styles.sidebarCtaDesc}>
-                  회원가입 후 나만의 식단을 기록해보세요
-                </div>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => navigate("/users/join")}
-                >
-                  회원 가입하기
-                </button>
-              </div>
-            )}
           </aside>
         </div>
       </div>
