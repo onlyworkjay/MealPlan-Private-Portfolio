@@ -1,5 +1,6 @@
 package mealplan.write.service;
 
+import mealplan.global.util.S3Uploader;
 import mealplan.users.dao.UserDao;
 import mealplan.users.vo.User;
 import mealplan.write.dao.WriteDao;
@@ -7,14 +8,9 @@ import mealplan.write.dto.WriteResponse;
 import mealplan.write.vo.Write;
 import mealplan.write.vo.WriteImage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,15 +27,9 @@ public class WriteService {
     @Autowired
     private UserDao userDao;
 
-    // User 프로필 사진과 동일한 파일 저장 설정을 재사용
-    @Value("${file.upload-dir}")
-    private String uploadDir;
-
-    @Value("${file.upload-url-prefix}")
-    private String uploadUrlPrefix;
-
-    @Value("${file.base-url}")
-    private String baseUrl;
+    // 이미지 업로드/삭제는 S3Uploader가 전담 (S3에 저장)
+    @Autowired
+    private S3Uploader s3Uploader;
 
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of(
             "image/jpeg", "image/jpg", "image/png", "image/webp"
@@ -106,7 +96,7 @@ public class WriteService {
         for (MultipartFile file : validImages) {
             WriteImage image = new WriteImage();
             image.setWrite(write);
-            image.setImageUrl(saveImage(userId, file));
+            image.setImageUrl(s3Uploader.upload(file, "write_" + userId));
             image.setSortOrder(order++);
             write.getImages().add(image);
         }
@@ -185,10 +175,10 @@ public class WriteService {
             }
         }
 
-        // 더 이상 유지하지 않는 기존 사진은 디스크에서도 함께 삭제
+        // 더 이상 유지하지 않는 기존 사진은 S3에서도 함께 삭제
         for (WriteImage img : write.getImages()) {
             if (!keepUrls.contains(img.getImageUrl())) {
-                deleteImageFile(img.getImageUrl());
+                s3Uploader.delete(img.getImageUrl());
             }
         }
 
@@ -207,7 +197,7 @@ public class WriteService {
         for (MultipartFile file : validNewImages) {
             WriteImage img = new WriteImage();
             img.setWrite(write);
-            img.setImageUrl(saveImage(userId, file));
+            img.setImageUrl(s3Uploader.upload(file, "write_" + userId));
             img.setSortOrder(order++);
             write.getImages().add(img);
         }
@@ -225,7 +215,7 @@ public class WriteService {
         return WriteResponse.from(saved, nickname, profileImg);
     }
 
-    // 게시물 삭제 (본인 게시물만 가능, 연결된 이미지 파일도 디스크에서 함께 제거)
+    // 게시물 삭제 (본인 게시물만 가능, 연결된 이미지 파일도 S3에서 함께 제거)
     public void deleteWrite(Long userId, Long writeId) {
         Write write = writeDao.findById(writeId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
@@ -235,7 +225,7 @@ public class WriteService {
         }
 
         for (WriteImage img : write.getImages()) {
-            deleteImageFile(img.getImageUrl());
+            s3Uploader.delete(img.getImageUrl());
         }
 
         // cascade=ALL, orphanRemoval=true 설정으로 WriteImage row들도 함께 삭제됨
@@ -261,39 +251,5 @@ public class WriteService {
                     return WriteResponse.from(w, nickname, profileImg);
                 })
                 .collect(Collectors.toList());
-    }
-
-    // 업로드된 이미지를 디스크에 저장하고 브라우저가 접근할 URL 경로를 반환
-    // (한 요청에 여러 장을 동시에 저장하므로, User 프로필 사진 저장 방식과 달리
-    //  같은 밀리초에 생성되는 파일명이 겹치지 않도록 난수를 추가함)
-    private String saveImage(Long userId, MultipartFile file) {
-        try {
-            String original = file.getOriginalFilename();
-            String ext = (original != null && original.contains("."))
-                    ? original.substring(original.lastIndexOf("."))
-                    : "";
-
-            String filename = "write_" + userId + "_" + System.currentTimeMillis()
-                    + "_" + (int) (Math.random() * 100000) + ext;
-
-            Path savePath = Paths.get(uploadDir, filename);
-            Files.createDirectories(savePath.getParent());
-            file.transferTo(savePath);
-
-            return baseUrl + uploadUrlPrefix + "/" + filename;
-        } catch (IOException e) {
-            throw new IllegalArgumentException("이미지 저장에 실패했습니다.");
-        }
-    }
-
-    // 이미지 URL에서 실제 파일명을 추출해 디스크에서 삭제 (게시물 수정/삭제 시 사용)
-    // 파일이 이미 없거나 삭제에 실패해도 게시물 수정/삭제 자체를 막지는 않음
-    private void deleteImageFile(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-        try {
-            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-            Files.deleteIfExists(Paths.get(uploadDir, filename));
-        } catch (IOException ignored) {
-        }
     }
 }

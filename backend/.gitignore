@@ -34,3 +34,6 @@ build/
 
 ### 민감 정보 (절대 커밋 금지) ###
 application.properties
+
+### S3 액세스 키, 비밀 액세스 키
+application-secret.properties
