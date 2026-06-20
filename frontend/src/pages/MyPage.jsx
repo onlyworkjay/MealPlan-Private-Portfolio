@@ -12,7 +12,7 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp
 const POSTS_PER_PAGE = 10;
 
 const MENU = [
-  { key: "posts", label: "내 게시물" },
+  { key: "posts", label: "내 피드" },
   { key: "profile", label: "내 정보 관리" },
   { key: "password", label: "비밀번호 변경" },
   { key: "withdraw", label: "회원 탈퇴" },
@@ -34,11 +34,11 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const { token, updateUser } = useAuth();
   const [tab, setTab] = useState("posts");
 
-  // ⬇️ 수정된 부분: MOCK_MY_POSTS 대신 실제 백엔드(/writes/my)에서 내 게시물을 불러옴
+  // 내 피드를 불러옴
   const [myPosts, setMyPosts] = useState([]);
   const [myPostsLoading, setMyPostsLoading] = useState(false);
 
-  // 내 게시물 검색 / 정렬 / 페이지네이션
+  // 내 피드 검색 / 정렬 / 페이지네이션
   const [postSearch, setPostSearch] = useState("");
   const [postSortOrder, setPostSortOrder] = useState("latest"); // "latest" | "oldest"
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,7 +70,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawPasswordError, setWithdrawPasswordError] = useState("");
 
-  // 내 게시물 목록을 불러오는 함수 (탭 진입 시, 그리고 삭제 후 갱신할 때도 재사용)
+  // 내 피드 목록을 불러오는 함수 (탭 진입 시, 그리고 삭제 후 갱신할 때도 재사용)
   // 정렬에 필요한 원본 날짜(rawDate)도 함께 보관 (화면 표시용 date는 포맷된 문자열)
   const fetchMyPosts = () => {
     setMyPostsLoading(true);
@@ -98,7 +98,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       .finally(() => setMyPostsLoading(false));
   };
 
-  // 내 게시물 탭으로 들어올 때마다 최신 목록을 다시 불러옴 (방금 등록한 글도 바로 보이도록)
+  // 내 피드 탭으로 들어올 때마다 최신 목록을 다시 불러옴 (방금 등록한 글도 바로 보이도록)
   // token이 아직 로딩되지 않은 시점(null/undefined)에는 요청을 보내지 않음
   // (보내면 인증 없이 나가서 401이 뜨고, 곧이어 token이 채워지면 다시 정상 호출되는 식으로 두 번 실행됨)
   useEffect(() => {
@@ -459,7 +459,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
             {tab === "posts" && (
               <>
                 <div className="page-header">
-                  <h1>내 게시물</h1>
+                  <h1>내 피드</h1>
                   <p>내가 작성한 식단 기록 모아보기</p>
                 </div>
 
