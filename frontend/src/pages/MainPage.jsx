@@ -409,7 +409,7 @@ const MainPage = () => {
       (p.content || "").includes(search),
   );
 
-  // 정렬 (최신순 / 오래된순)
+  // 정렬 (최신순 / 등록순)
   const sorted = [...filtered].sort((a, b) => {
     const diff = new Date(a.createdAt) - new Date(b.createdAt);
     return sortOrder === "latest" ? -diff : diff;
@@ -553,7 +553,7 @@ const MainPage = () => {
                 onChange={(e) => setSortOrder(e.target.value)}
               >
                 <option value="latest">최신순</option>
-                <option value="oldest">오래된순</option>
+                <option value="oldest">등록순</option>
               </select>
               {isLoggedIn && (
                 <button

@@ -1,4 +1,4 @@
-import "../styles/Pagination.css";
+import styles from "../styles/Pagination.module.css";
 
 /**
  * Pagination 컴포넌트
@@ -31,9 +31,9 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   };
 
   return (
-    <nav className="pagination" aria-label="페이지 이동">
+    <nav className={styles.pagination} aria-label="페이지 이동">
       <button
-        className="pagination-btn"
+        className={styles["pagination-btn"]}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         aria-label="이전 페이지"
@@ -43,11 +43,11 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
 
       {getPages().map((p, idx) =>
         p === "..." ? (
-          <span className="pagination-ellipsis" key={`ellipsis-${idx}`}>…</span>
+          <span className={styles["pagination-ellipsis"]} key={`ellipsis-${idx}`}>…</span>
         ) : (
           <button
             key={p}
-            className={`pagination-btn${currentPage === p ? " active" : ""}`}
+            className={`${styles["pagination-btn"]}${currentPage === p ? ` ${styles.active}` : ""}`}
             onClick={() => onPageChange(p)}
             aria-current={currentPage === p ? "page" : undefined}
           >
@@ -57,7 +57,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       )}
 
       <button
-        className="pagination-btn"
+        className={styles["pagination-btn"]}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         aria-label="다음 페이지"

@@ -1,7 +1,7 @@
 import axios from "axios";
 import styles from "./EmailAuth.module.css";
 import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { showSwal } from "../utils/SwalAlert";
 
 const EmailAuth = ({
   //1. 이메일과 관련된 변수들을 지정
@@ -37,29 +37,29 @@ const EmailAuth = ({
     if (disableSend) return;
 
     if (mailAuth === 1) {
-      Swal.fire({
+      showSwal({
+        type: "info",
         title: "이미 인증메일을 보냈습니다.",
         text: "3분 이내에 인증 번호를 확인해 주세요",
-        icon: "info",
       });
       return;
     }
 
     //5. 빈값 체크
     if (!email) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "이메일을 입력해주세요",
         text: "인증번호를 받으실 이메일을 입력해주세요",
-        icon: "warning",
       });
       return;
     }
     // 14. 이메일 정규식 패턴 검사
     if (!emailRegex.test(email)) {
-      Swal.fire({
+      showSwal({
+        type: "error",
         title: "올바르지 않은 이메일 형식",
         text: "이메일 주소를 다시 확인해 주세요",
-        icon: "error",
       });
       return;
     }
@@ -82,10 +82,10 @@ const EmailAuth = ({
         // 인증 메일을 새로 보낼 때 타이머 초기화
         setTime(180);
         setTimeExpired(false);
-        Swal.fire({
+        showSwal({
+          type: "success",
           title: "이메일 인증 메일을 보냈습니다.",
           text: "3분 이내에 인증메일을 확인해주세요",
-          icon: "success",
         });
       })
       .catch((err) => {
@@ -143,18 +143,18 @@ const EmailAuth = ({
         setMailAuth(3);
         onVerified(true);
 
-        Swal.fire({
+        showSwal({
+          type: "success",
           title: successMessage,
-          icon: "success",
         });
       })
       .catch((err) => {
         setMailAuth(1);
         onVerified(false);
 
-        Swal.fire({
+        showSwal({
+          type: "warning",
           title: err.response?.data || "인증 번호가 일치하지 않습니다.",
-          icon: "warning",
         });
       });
   };
@@ -190,7 +190,7 @@ const EmailAuth = ({
         </div>
 
         <div className={styles.input_wrap}>
-          <label htmlFor="inputAuthCode">이메일 확인</label>
+          <label htmlFor="inputAuthCode">인증번호 확인</label>
           <div className={styles.input_item}>
             <input
               className={styles.email_input}
@@ -199,6 +199,7 @@ const EmailAuth = ({
               id="inputAuthCode"
               onChange={(e) => setInputAuthCode(e.target.value)}
               placeholder="인증번호 6자리를 입력하세요."
+              disabled={mailAuth !== 1}
             />
             <button
               type="button"

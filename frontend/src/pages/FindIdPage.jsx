@@ -3,7 +3,7 @@ import styles from "./FindIdPage.module.css";
 import EmailAuth from "../emailauth/EmailAuth";
 import logo from "../assets/logo.svg";
 import axios from "axios";
-import Swal from "sweetalert2";
+import { showSwal } from "../utils/SwalAlert";
 import { useNavigate } from "react-router-dom";
 
 const FindIdPage = () => {
@@ -35,16 +35,16 @@ const FindIdPage = () => {
         },
       );
 
-      Swal.fire({
+      showSwal({
+        type: "success",
         title: "아이디 찾기 결과",
-        html: `회원님의 아이디는 <b>${res.data.loginId}</b> 입니다.<br/>가입일: ${formatDate(res.data.createdAt)}`,
-        icon: "success",
+        text: `회원님의 아이디는 <b>${res.data.loginId}</b> 입니다.<br/>가입일: ${formatDate(res.data.createdAt)}`,
       });
     } catch (err) {
-      Swal.fire({
+      showSwal({
+        type: "error",
         title: "조회 실패",
         text: err.response?.data || "일치하는 정보가 없습니다.",
-        icon: "error",
       });
     }
   };

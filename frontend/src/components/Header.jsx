@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Header.module.css";
+import { showSwal } from "../utils/SwalAlert";
 
 import logo from "../assets/logo.svg";
 import defaultProfile from "../assets/default-profile.svg";
@@ -51,6 +52,17 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
 
   const handleCloseMenu = () => {
     setMenuOpen(false);
+  };
+
+  // 로그아웃 - 로그아웃 처리 후 "로그인이 필요한 기능입니다" 안내, 확인을 누르면 로그인 페이지로 이동
+  const handleLogout = () => {
+    onLogout();
+    showSwal({
+      type: "info",
+      title: "로그인을 해야 사용할 수 있는 기능입니다",
+    }).then(() => {
+      navigate("/users/login");
+    });
   };
 
   return (
@@ -124,7 +136,10 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
                 >
                   마이페이지
                 </button>
-                <button className="btn btn-ghost btn-sm" onClick={onLogout}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleLogout}
+                >
                   로그아웃
                 </button>
               </>
@@ -208,7 +223,7 @@ const Header = ({ isLoggedIn, user, onLogout, remainingSeconds }) => {
                 className={styles.mobile_logout_btn}
                 onClick={() => {
                   setMenuOpen(false);
-                  onLogout();
+                  handleLogout();
                 }}
               >
                 로그아웃

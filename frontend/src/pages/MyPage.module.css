@@ -1,3 +1,5 @@
+/* MyPage.module.css */
+
 .mypage_layout {
   display: grid;
   grid-template-columns: 260px 1fr;

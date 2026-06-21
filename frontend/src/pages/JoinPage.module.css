@@ -1,3 +1,5 @@
+/* JoinPage.module.css */
+
 /* 페이지 전체 wrap */
 .join_page {
   min-height: calc(100vh - var(--nav-h));

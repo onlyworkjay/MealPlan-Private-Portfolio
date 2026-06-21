@@ -1,3 +1,5 @@
+/* LoginPage.module.css */
+
 .login_page_wrap {
   min-height: calc(100vh - var(--nav-h));
   display: flex;

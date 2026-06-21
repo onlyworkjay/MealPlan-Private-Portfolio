@@ -386,6 +386,17 @@ export default function MyPage({ user, onLogout, onNavigate }) {
       });
   };
 
+  // 로그아웃 - 로그아웃 처리 후 "로그인이 필요한 기능입니다" 안내, 확인을 누르면 로그인 페이지로 이동
+  const handleLogout = () => {
+    onLogout();
+    showSwal({
+      type: "info",
+      title: "로그인을 해야 사용할 수 있는 기능입니다",
+    }).then(() => {
+      onNavigate("users/login");
+    });
+  };
+
   return (
     <div className="page">
       <div className="wrap">
@@ -445,10 +456,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
               ))}
               <button
                 className={styles.mypage_logout}
-                onClick={() => {
-                  onLogout();
-                  onNavigate("feed");
-                }}
+                onClick={handleLogout}
               >
                 로그아웃
               </button>

@@ -6,13 +6,13 @@ import questionIcon from "../assets/swal/question.svg";
 import infoIcon from "../assets/swal/info.svg";
 import errorIcon from "../assets/swal/error.svg";
 
+// app.css 색상 팔레트 (CSS 파일은 건드리지 않고 JS에서 값만 재사용)
 const COLORS = {
   primaryDeeper: "#0369a1",
   primarySoft: "#e0f4fd",
   primaryMid: "#bae6fd",
   text: "#0f172a",
   textSub: "#475569",
-  danger: "#ef4444",
 };
 
 const ICONS = {
@@ -23,11 +23,12 @@ const ICONS = {
   error: errorIcon,
 };
 
+// 타입별 팝업 강조 색 (그림자 등에 사용)
 const TYPE_ACCENT = {
   success: "#0284c7",
   warning: "#ef4444",
-  question: "#9333ea",
-  info: "#65a30d",
+  question: "#38bdf8",
+  info: "#0369a1",
   error: "#f0a500",
 };
 
@@ -36,7 +37,7 @@ export const showSwal = ({
   title,
   text,
   confirmButtonText = "확인",
-  confirmButtonColor, // 지정 안 하면 기본 파란색(primaryDeeper) 사용
+  confirmButtonColor,
   showCancelButton = false,
   cancelButtonText = "취소",
 }) => {
@@ -83,7 +84,7 @@ export const showSwal = ({
         confirmBtn.style.fontWeight = "600";
         confirmBtn.style.boxShadow = `0 4px 12px ${confirmColor}55`;
         confirmBtn.style.cursor = "pointer";
-        confirmBtn.style.marginRight = "0"; // gap이 처리하므로 margin 중복 제거
+        confirmBtn.style.marginRight = "0";
       }
 
       const cancelBtn = popup.querySelector(".swal2-cancel");
@@ -95,7 +96,7 @@ export const showSwal = ({
         cancelBtn.style.padding = "10px 28px";
         cancelBtn.style.fontSize = "14px";
         cancelBtn.style.fontWeight = "600";
-        cancelBtn.style.marginLeft = "0"; // gap이 처리하므로 margin 중복 제거
+        cancelBtn.style.marginLeft = "0";
         cancelBtn.style.cursor = "pointer";
       }
     },

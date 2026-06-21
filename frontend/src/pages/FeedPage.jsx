@@ -403,11 +403,10 @@ const FeedPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 초기화 버튼 - 오늘 날짜로 돌아가고, 오늘 등록된 게시물이 있으면 모두 보여줌
+  // 초기화 버튼 - 날짜 필터를 완전히 해제하고, 캘린더는 오늘이 보이는 화면으로 리셋
   const handleResetCalendar = () => {
-    const todayKey = toDateKey(new Date().toISOString());
-    setSelectedDate(todayKey);
-    setCalendarKey((k) => k + 1); // MiniCalendar를 리마운트해서 오늘 연/월·날짜 화면으로 리셋
+   setSelectedDate(null);  
+    setCalendarKey((k) => k + 1);
   };
 
   return (
