@@ -499,7 +499,7 @@ const MainPage = () => {
               {
                 icon: "📸",
                 title: "사진으로 기록",
-                desc: "최대 4장까지 업로드. JPG·PNG·WEBP 지원",
+                desc: "최대 4장까지 업로드. JPEG·JPG·PNG·WEBP 지원",
               },
               {
                 icon: "🔥",
@@ -665,7 +665,13 @@ const MainPage = () => {
             <div className={styles.sidebarCard}>
               <div className={styles.calendarTitleRow}>
                 <div className={styles.calendarTitleText}>📅 달력</div>
-               
+                <button
+                  type="button"
+                  className={styles.resetBtn}
+                  onClick={handleResetCalendar}
+                >
+                  ⟳ 초기화
+                </button>
               </div>
               {/* 메인페이지 캘린더는 관상용 - 클릭/페이지 이동 전부 비활성화, 기록 점 표시도 안 함 */}
               <MiniCalendar key={calendarKey} readOnly />

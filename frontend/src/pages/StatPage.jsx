@@ -25,6 +25,10 @@ const toDateKey = (isoString) => {
 
 const todayKey = () => toDateKey(new Date().toISOString());
 
+// 체중 입력 허용 범위 (비현실적인 값 방지)
+const MIN_WEIGHT = 1;
+const MAX_WEIGHT = 300;
+
 const StatPage = () => {
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
@@ -120,8 +124,21 @@ const StatPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!inputWeight || Number(inputWeight) <= 0) {
+    const weightNum = Number(inputWeight);
+
+    if (!inputWeight || Number.isNaN(weightNum) || weightNum <= 0) {
       setSaveMsg("체중을 올바르게 입력해주세요.");
+      return;
+    }
+    // 비현실적인 값(예: 655555kg) 입력 방지 - 사람 체중으로 합리적인 범위만 허용
+    if (weightNum < MIN_WEIGHT || weightNum > MAX_WEIGHT) {
+      setSaveMsg(`체중은 ${MIN_WEIGHT}kg ~ ${MAX_WEIGHT}kg 사이로 입력해주세요.`);
+      return;
+    }
+    // 소수점 셋째 자리 이상 입력 시 - 브라우저 기본 검증 팝업 대신 직접 안내 후 저장 중단
+    const decimalPart = inputWeight.split(".")[1];
+    if (decimalPart && decimalPart.length > 2) {
+      setSaveMsg("소수점 둘째 자리까지 입력 가능합니다. 올바른 값을 입력해주세요.");
       return;
     }
 
@@ -130,7 +147,7 @@ const StatPage = () => {
     axios
       .post(
         `${import.meta.env.VITE_BACKSERVER}/stats`,
-        { date: inputDate, weight: Number(inputWeight) },
+        { date: inputDate, weight: weightNum },
         { headers: { Authorization: `Bearer ${token}` } },
       )
       .then(() => {
@@ -201,13 +218,14 @@ const StatPage = () => {
                 <ResponsiveContainer width="100%" height={280}>
                   <LineChart
                     data={chartData}
-                    margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis
                       dataKey="date"
                       tick={{ fontSize: 12 }}
                       stroke="var(--text-light)"
+                      tickMargin={8}
                     />
                     <YAxis
                       domain={["dataMin - 1", "dataMax + 1"]}
@@ -235,7 +253,7 @@ const StatPage = () => {
           {/* 체중 입력 */}
           <section className={styles.card}>
             <div className={styles.cardTitle}>⚖️ 체중 입력</div>
-            <form className={styles.weightForm} onSubmit={handleSubmit}>
+            <form className={styles.weightForm} onSubmit={handleSubmit} noValidate>
               <div className={styles.formRow}>
                 <label htmlFor="stat-date">날짜</label>
                 <input
@@ -252,11 +270,17 @@ const StatPage = () => {
                   id="stat-weight"
                   type="number"
                   step="0.01"
-                  min="0"
+                  min={MIN_WEIGHT}
+                  max={MAX_WEIGHT}
                   placeholder="예: 65.50"
                   value={inputWeight}
                   onChange={(e) => setInputWeight(e.target.value)}
                 />
+              </div>
+              {/* 입력 가능 범위 안내 - 입력칸과 저장 버튼 사이에 배치 */}
+              <div className={styles.weightHint}>
+                체중은 {MIN_WEIGHT}kg ~ {MAX_WEIGHT}kg 사이로, 소수점 둘째
+                자리까지 입력할 수 있어요.
               </div>
               <button
                 type="submit"
@@ -265,7 +289,15 @@ const StatPage = () => {
               >
                 {saving ? "저장 중..." : "저장하기"}
               </button>
-              {saveMsg && <div className={styles.saveMsg}>{saveMsg}</div>}
+             {saveMsg && (
+  <div
+    className={`${styles.saveMsg} ${
+      saveMsg.includes("저장되었습니다") ? "" : styles.saveMsgError
+    }`}
+  >
+    {saveMsg}
+  </div>
+)}
             </form>
           </section>
 

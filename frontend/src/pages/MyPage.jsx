@@ -30,6 +30,64 @@ const formatDateTime = (isoString) => {
   return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
 };
 
+// 비밀번호 표시/숨김 토글용 눈 아이콘 (LoginPage와 동일한 디자인)
+const EyeIcon = ({ open }) =>
+  open ? (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ) : (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a18.6 18.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+
+// 비밀번호 입력칸 + 눈 모양 토글 버튼을 묶어주는 작은 컴포넌트 (반복 제거용)
+const PasswordField = ({ value, onChange, onKeyDown, placeholder }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className={styles.password_input_wrap}>
+      <input
+        type={show ? "text" : "password"}
+        className="form-input"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+      />
+      <button
+        type="button"
+        className={styles.password_toggle_btn}
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? "비밀번호 숨기기" : "비밀번호 보기"}
+        tabIndex={-1}
+      >
+        <EyeIcon open={show} />
+      </button>
+    </div>
+  );
+};
+
 export default function MyPage({ user, onLogout, onNavigate }) {
   const { token, updateUser } = useAuth();
   const [tab, setTab] = useState("posts");
@@ -706,9 +764,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                         <label className="form-label">
                           현재 비밀번호 <span className="required">*</span>
                         </label>
-                        <input
-                          type="password"
-                          className="form-input"
+                        <PasswordField
                           placeholder="현재 비밀번호"
                           value={currentPassword}
                           onChange={(e) => {
@@ -739,9 +795,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                         <label className="form-label">
                           새 비밀번호 <span className="required">*</span>
                         </label>
-                        <input
-                          type="password"
-                          className="form-input"
+                        <PasswordField
                           placeholder="새 비밀번호"
                           value={newPassword}
                           onChange={(e) => {
@@ -761,9 +815,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                         <label className="form-label">
                           새 비밀번호 확인 <span className="required">*</span>
                         </label>
-                        <input
-                          type="password"
-                          className="form-input"
+                        <PasswordField
                           placeholder="새 비밀번호 확인"
                           value={confirmPassword}
                           onChange={(e) => {
@@ -816,9 +868,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                         <label className="form-label">
                           현재 비밀번호 <span className="required">*</span>
                         </label>
-                        <input
-                          type="password"
-                          className="form-input"
+                        <PasswordField
                           placeholder="현재 비밀번호"
                           value={withdrawPassword}
                           onChange={(e) => {

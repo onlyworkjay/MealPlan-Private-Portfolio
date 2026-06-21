@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import Swal from "sweetalert2";
 import styles from "./WriteViewPage.module.css";
 import defaultProfile from "../assets/default-profile.svg";
 import { useAuth } from "../contexts/AuthContext";
+import { showSwal } from "../utils/SwalAlert";
 
 // 날짜+시간을 "YYYY.MM.DD HH:MM" 형식으로 표시 (초는 표시하지 않음)
 const formatDateTime = (isoString) => {
@@ -36,11 +36,11 @@ const WriteViewPage = () => {
         setActiveImg(0);
       })
       .catch((err) => {
-        Swal.fire({
+        showSwal({
+          type: "error",
           title: "게시물을 불러오지 못했습니다",
           text:
             err.response?.data || "삭제되었거나 존재하지 않는 게시물입니다.",
-          icon: "error",
         }).then(() => navigate(-1));
       })
       .finally(() => setLoading(false));
@@ -65,14 +65,14 @@ const WriteViewPage = () => {
 
   // 게시물 삭제 - 확인 팝업 후 실제 백엔드(/writes/{id}) 삭제 요청, 성공 시 피드로 이동
   const handleDelete = () => {
-    Swal.fire({
+    showSwal({
+      type: "warning",
       title: "정말 삭제하시겠습니까?",
       text: "삭제한 게시물은 복구할 수 없습니다.",
-      icon: "warning",
-      showCancelButton: true,
       confirmButtonText: "삭제",
-      cancelButtonText: "취소",
       confirmButtonColor: "#ef4444",
+      showCancelButton: true,
+      cancelButtonText: "취소",
     }).then((result) => {
       if (!result.isConfirmed) return;
 
@@ -81,16 +81,16 @@ const WriteViewPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then(() => {
-          Swal.fire({
+          showSwal({
+            type: "success",
             title: "삭제되었습니다",
-            icon: "success",
           }).then(() => navigate("/"));
         })
         .catch((err) => {
-          Swal.fire({
+          showSwal({
+            type: "error",
             title: "삭제에 실패했습니다",
             text: err.response?.data || "잠시 후 다시 시도해주세요.",
-            icon: "error",
           });
         });
     });

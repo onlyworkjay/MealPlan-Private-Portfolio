@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styles from "./WritePage.module.css";
-import Swal from "sweetalert2";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { showSwal } from "../utils/SwalAlert";
 
 const TITLE_MAX = 50;
 const CONTENT_MAX = 1000;
@@ -18,7 +18,7 @@ export default function WritePage({ onNavigate }) {
   const [calories, setCalories] = useState("");
   const hasImage = images.some((i) => i !== null);
 
-  // 허용된 이미지 형식이 아니면 Swal 경고를 띄우고 첨부하지 않음
+  // 허용된 이미지 형식이 아니면 경고를 띄우고 첨부하지 않음
   const ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
     "image/jpg",
@@ -31,10 +31,10 @@ export default function WritePage({ onNavigate }) {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "지원하지 않는 파일 형식입니다",
         text: "JPG·JPEG·PNG·WEBP 형식의 이미지만 첨부할 수 있습니다.",
-        icon: "warning",
       });
       e.target.value = ""; // 같은 파일을 다시 선택해도 onChange가 동작하도록 초기화
       return;
@@ -65,14 +65,14 @@ export default function WritePage({ onNavigate }) {
     });
   };
 
-  // 제목 글자 수 제한 - 초과 시 Swal 경고 후 최대 길이로 잘라냄
+  // 제목 글자 수 제한 - 초과 시 경고 후 최대 길이로 잘라냄
   const handleTitleChange = (e) => {
     const value = e.target.value;
     if (value.length > TITLE_MAX) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "글자 수를 초과했습니다",
         text: `제목은 최대 ${TITLE_MAX}자까지 입력할 수 있습니다.`,
-        icon: "warning",
       });
       setTitle(value.slice(0, TITLE_MAX));
       return;
@@ -80,14 +80,14 @@ export default function WritePage({ onNavigate }) {
     setTitle(value);
   };
 
-  // 내용 글자 수 제한 - 초과 시 Swal 경고 후 최대 길이로 잘라냄
+  // 내용 글자 수 제한 - 초과 시 경고 후 최대 길이로 잘라냄
   const handleContentChange = (e) => {
     const value = e.target.value;
     if (value.length > CONTENT_MAX) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "글자 수를 초과했습니다",
         text: `내용은 최대 ${CONTENT_MAX.toLocaleString("ko-KR")}자까지 입력할 수 있습니다.`,
-        icon: "warning",
       });
       setContent(value.slice(0, CONTENT_MAX));
       return;
@@ -95,20 +95,20 @@ export default function WritePage({ onNavigate }) {
     setContent(value);
   };
 
-  // ⬇️ 수정된 부분: alert()만 띄우던 목업을 실제 백엔드(/writes) 등록 요청으로 교체
+  // ⬇️ 수정된 부분: 등록 성공 시 피드 목록이 아니라, 방금 작성한 게시물의 상세보기 페이지로 이동
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!hasImage) {
-      Swal.fire({ title: "사진을 1장 이상 첨부해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "사진을 1장 이상 첨부해주세요." });
       return;
     }
     if (!title.trim()) {
-      Swal.fire({ title: "제목을 입력해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "제목을 입력해주세요." });
       return;
     }
     if (!calories) {
-      Swal.fire({ title: "칼로리를 입력해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "칼로리를 입력해주세요." });
       return;
     }
 
@@ -124,19 +124,19 @@ export default function WritePage({ onNavigate }) {
       .post(`${import.meta.env.VITE_BACKSERVER}/writes`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(() => {
-        Swal.fire({
-          title: "게시물이 등록되었습니다!",
-          icon: "success",
+      .then((res) => {
+        showSwal({
+          type: "success",
+          title: "피드가 등록되었습니다!",
         }).then(() => {
-          onNavigate("feed");
+          onNavigate(`mealplan/write-view/${res.data.writeId}`);
         });
       })
       .catch((err) => {
-        Swal.fire({
+        showSwal({
+          type: "error",
           title: "등록에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          icon: "error",
         });
       });
   };
@@ -287,7 +287,7 @@ export default function WritePage({ onNavigate }) {
               type="submit"
               className={`btn btn-primary ${styles.write_submit}`}
             >
-              게시물 등록하기
+            피드 등록하기
             </button>
           </form>
         </div>

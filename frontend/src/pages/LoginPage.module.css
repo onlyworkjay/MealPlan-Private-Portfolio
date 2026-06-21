@@ -141,6 +141,36 @@
 .form-input::placeholder {
   color: var(--text-light);
 }
+
+/* 비밀번호 입력칸 + 눈 모양 토글 버튼 */
+.password_input_wrap {
+  position: relative;
+}
+
+.password_input_wrap .form-input {
+  padding-right: 44px;
+}
+
+.password_toggle_btn {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color var(--ease);
+}
+
+.password_toggle_btn:hover {
+  color: var(--primary-dark);
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 28px 18px;

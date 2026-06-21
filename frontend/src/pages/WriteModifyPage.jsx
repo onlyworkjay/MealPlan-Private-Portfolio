@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./WriteModifyPage.module.css";
-import Swal from "sweetalert2";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { showSwal } from "../utils/SwalAlert";
 
 const TITLE_MAX = 50;
 const CONTENT_MAX = 1000;
@@ -44,10 +44,10 @@ export default function WriteModifyPage() {
         const post = res.data;
 
         if (!user?.userId || user.userId !== post.userId) {
-          Swal.fire({
+          showSwal({
+            type: "warning",
             title: "수정 권한이 없습니다",
             text: "본인이 작성한 게시물만 수정할 수 있습니다.",
-            icon: "warning",
           }).then(() => navigate(-1));
           return;
         }
@@ -66,11 +66,11 @@ export default function WriteModifyPage() {
         );
       })
       .catch((err) => {
-        Swal.fire({
+        showSwal({
+          type: "error",
           title: "게시물을 불러오지 못했습니다",
           text:
             err.response?.data || "삭제되었거나 존재하지 않는 게시물입니다.",
-          icon: "error",
         }).then(() => navigate(-1));
       })
       .finally(() => setLoading(false));
@@ -82,10 +82,10 @@ export default function WriteModifyPage() {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "지원하지 않는 파일 형식입니다",
         text: "JPG·JPEG·PNG·WEBP 형식의 이미지만 첨부할 수 있습니다.",
-        icon: "warning",
       });
       e.target.value = "";
       return;
@@ -110,10 +110,10 @@ export default function WriteModifyPage() {
   const handleTitleChange = (e) => {
     const value = e.target.value;
     if (value.length > TITLE_MAX) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "글자 수를 초과했습니다",
         text: `제목은 최대 ${TITLE_MAX}자까지 입력할 수 있습니다.`,
-        icon: "warning",
       });
       setTitle(value.slice(0, TITLE_MAX));
       return;
@@ -124,10 +124,10 @@ export default function WriteModifyPage() {
   const handleContentChange = (e) => {
     const value = e.target.value;
     if (value.length > CONTENT_MAX) {
-      Swal.fire({
+      showSwal({
+        type: "warning",
         title: "글자 수를 초과했습니다",
         text: `내용은 최대 ${CONTENT_MAX.toLocaleString("ko-KR")}자까지 입력할 수 있습니다.`,
-        icon: "warning",
       });
       setContent(value.slice(0, CONTENT_MAX));
       return;
@@ -139,15 +139,15 @@ export default function WriteModifyPage() {
     e.preventDefault();
 
     if (!hasImage) {
-      Swal.fire({ title: "사진을 1장 이상 첨부해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "사진을 1장 이상 첨부해주세요." });
       return;
     }
     if (!title.trim()) {
-      Swal.fire({ title: "제목을 입력해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "제목을 입력해주세요." });
       return;
     }
     if (!calories) {
-      Swal.fire({ title: "칼로리를 입력해주세요.", icon: "warning" });
+      showSwal({ type: "warning", title: "칼로리를 입력해주세요." });
       return;
     }
 
@@ -165,18 +165,18 @@ export default function WriteModifyPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        Swal.fire({
+        showSwal({
+          type: "success",
           title: "게시물이 수정되었습니다!",
-          icon: "success",
         }).then(() => {
           navigate(`/mealplan/write-view/${writeId}`);
         });
       })
       .catch((err) => {
-        Swal.fire({
+        showSwal({
+          type: "error",
           title: "수정에 실패했습니다",
           text: err.response?.data || "잠시 후 다시 시도해주세요.",
-          icon: "error",
         });
       });
   };
