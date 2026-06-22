@@ -1,9 +1,13 @@
 # Meal_Plan
 개인 포트폴리오인 Meal Plan 식단 사이트 제작
 
-PPT 주소: https://canva.link/pdyvn5z6xrw7x76
+📄 포트폴리오 PPT: [Canva 링크](https://canva.link/pdyvn5z6xrw7x76)
 
-ERD CLOUD 테이블 : https://www.erdcloud.com/d/jWiZEGb86F7yWnYAi
+📁 GitHub: https://github.com/onlyworkjay/MealPlan-Private-Portfolio  
+
+📄 발표자료: [MealPlan_Private_Portfolio.pdf](./MealPlan_Private_Portfolio.pdf)
+
+📊 ERD CLOUD: https://www.erdcloud.com/d/jWiZEGb86F7yWnYAi
 
 # 🥗 Meal Plan - 식단 기록 사이트
 
