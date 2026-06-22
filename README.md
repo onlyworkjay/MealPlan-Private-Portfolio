@@ -54,25 +54,43 @@ ERD CLOUD 테이블 : https://www.erdcloud.com/d/jWiZEGb86F7yWnYAi
 
 ## 📡 API 명세
 
-| 분류 | Method | URL | 설명 | 인증 필요 |
-|------|--------|-----|------|:---------:|
-| **회원** | POST | /api/auth/login | 로그인 (JWT 토큰 발급) | X |
-| | POST | /api/auth/signup | 회원가입 | X |
-| | POST | /api/auth/find-id | 아이디 찾기 (이메일 인증번호 전송) | X |
-| | POST | /api/auth/find-password | 비밀번호 찾기 (이메일 인증번호 전송) | X |
-| | PUT | /api/auth/reset-password | 비밀번호 재설정 | X |
-| | GET | /api/user/me | 내 정보 조회 | O |
-| | PUT | /api/user/me | 내 정보 수정 (닉네임·이메일·비밀번호·프로필 사진) | O |
-| | DELETE | /api/user/me | 회원 탈퇴 (Hard Delete) | O |
-| **피드** | GET | /api/feed | 전체 피드 목록 조회 | X |
-| | GET | /api/feed/today | 오늘의 피드 조회 | X |
-| | GET | /api/feed/search?keyword= | 키워드 검색 | X |
-| | GET | /api/feed/{feedId} | 피드 상세 조회 | X |
-| | POST | /api/feed | 피드 등록 (사진 포함, S3 업로드) | O |
-| | PUT | /api/feed/{feedId} | 피드 수정 | O |
-| | DELETE | /api/feed/{feedId} | 피드 삭제 (S3 이미지 함께 삭제) | O |
-| | GET | /api/feed/my | 내가 작성한 피드 목록 조회 | O |
-| | GET | /api/feed/date?date= | 날짜별 피드 조회 | O |
-| **통계** | GET | /api/stats/weight | 체중 기록 목록 조회 | O |
-| | POST | /api/stats/weight | 체중 입력 | O |
-| | GET | /api/stats/photos | 날짜별 사진 슬라이드 조회 | O |
+### 👤 회원 (User)
+
+| Method | URL | 설명 | 인증 필요 |
+|--------|-----|------|:---------:|
+| POST | /users/join | 회원가입 | X |
+| GET | /users/check-id?loginId= | 아이디 중복 확인 | X |
+| GET | /users/check-nickname?nickname= | 닉네임 중복 확인 | X |
+| GET | /users/check-email?email= | 이메일 중복 확인 | X |
+| POST | /users/login | 로그인 (JWT 토큰 발급) | X |
+| POST | /users/refresh | 토큰 재발급 (세션 연장) | O |
+| POST | /users/find-id | 아이디 찾기 (닉네임 + 이메일 확인) | X |
+| POST | /users/reset-password | 비밀번호 재설정 | X |
+| POST | /users/profile | 내 정보 수정 (닉네임·이메일·프로필 사진) | O |
+| POST | /users/password | 비밀번호 변경 | O |
+| POST | /users/withdraw | 회원 탈퇴 (Hard Delete) | O |
+
+### 📧 이메일 인증 (Email)
+
+| Method | URL | 설명 | 인증 필요 |
+|--------|-----|------|:---------:|
+| POST | /users/email-verification | 인증번호 전송 (유효시간 3분) | X |
+| POST | /users/email-verification/confirm | 인증번호 확인 | X |
+
+### 🍽 피드 (Write)
+
+| Method | URL | 설명 | 인증 필요 |
+|--------|-----|------|:---------:|
+| POST | /writes | 피드 등록 (사진 포함, S3 업로드) | O |
+| GET | /writes | 전체 피드 목록 조회 | X |
+| GET | /writes/my | 내가 작성한 피드 목록 조회 | O |
+| GET | /writes/{writeId} | 피드 상세 조회 | X |
+| POST | /writes/{writeId} | 피드 수정 (제목·내용·칼로리·사진) | O |
+| DELETE | /writes/{writeId} | 피드 삭제 (S3 이미지 함께 삭제) | O |
+
+### 📊 통계 (Stat)
+
+| Method | URL | 설명 | 인증 필요 |
+|--------|-----|------|:---------:|
+| POST | /stats | 체중 입력 | O |
+| GET | /stats/my | 내 체중 변화 기록 전체 조회 (그래프용) | O |
