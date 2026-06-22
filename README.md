@@ -15,12 +15,19 @@ ERD CLOUD 테이블 : https://www.erdcloud.com/d/jWiZEGb86F7yWnYAi
 
 | 분류 | 기술 |
 |------|------|
-| **Frontend** | React, JSX, CSS |
-| **Backend** | Spring Boot, JPA |
+| **Frontend** | React 18, JSX, CSS, Vite |
+| **HTTP 통신** | Axios |
+| **차트** | Recharts |
+| **알림** | SweetAlert2 (SWAL) |
+| **인증** | JWT (Context API 기반 전역 상태 관리) |
+| **Backend** | Spring Boot 3.5, Spring Security Crypto |
+| **ORM** | JPA |
 | **Database** | MySQL |
 | **Cloud** | AWS S3 (이미지 저장) |
+| **인증** | JWT (jjwt) |
+| **이메일** | Spring Mail |
+| **기타** | Lombok |
 | **버전 관리** | Git |
-| **IDE** | IntelliJ |
 
 ---
 
