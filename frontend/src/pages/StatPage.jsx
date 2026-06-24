@@ -13,7 +13,6 @@ import {
 import styles from "./StatPage.module.css";
 import { useAuth } from "../contexts/AuthContext";
 
-// 날짜를 "YYYY-MM-DD" 형식으로 변환 (input[type=date] 기본값, 슬라이드 그룹핑 키로 사용)
 const toDateKey = (isoString) => {
   if (!isoString) return null;
   const d = new Date(isoString);
@@ -25,31 +24,160 @@ const toDateKey = (isoString) => {
 
 const todayKey = () => toDateKey(new Date().toISOString());
 
-// 체중 입력 허용 범위 (비현실적인 값 방지)
 const MIN_WEIGHT = 1;
 const MAX_WEIGHT = 300;
 
+// ────────────────────────────────────────────────
+// 커스텀 달력 컴포넌트
+// ────────────────────────────────────────────────
+const CustomCalendar = ({ value, onChange, feedDates }) => {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
+
+  const feedDateSet = useMemo(() => new Set(feedDates), [feedDates]);
+
+  const selectedKey = value; // "YYYY-MM-DD"
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay(); // 0=일
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const toPrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else setViewMonth((m) => m - 1);
+  };
+  const toNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else setViewMonth((m) => m + 1);
+  };
+
+  const handleDayClick = (day) => {
+    const mm = String(viewMonth + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    const key = `${viewYear}-${mm}-${dd}`;
+    // 미래 날짜 선택 불가
+    if (key > todayKey()) return;
+    onChange(key);
+  };
+
+  const weeks = [];
+  let cells = Array(firstDay).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+  const monthNames = [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월",
+  ];
+
+  return (
+    <div className={styles.calendar}>
+      {/* 헤더 */}
+      <div className={styles.calHeader}>
+        <button
+          type="button"
+          className={styles.calNavBtn}
+          onClick={toPrevMonth}
+        >
+          ‹
+        </button>
+        <span className={styles.calTitle}>
+          {viewYear}년 {monthNames[viewMonth]}
+        </span>
+        <button
+          type="button"
+          className={styles.calNavBtn}
+          onClick={toNextMonth}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* 요일 */}
+      <div className={styles.calWeekRow}>
+        {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
+          <div key={d} className={styles.calWeekCell}>
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* 날짜 */}
+      {weeks.map((week, wi) => (
+        <div key={wi} className={styles.calWeekRow}>
+          {week.map((day, di) => {
+            if (!day) return <div key={di} className={styles.calCell} />;
+            const mm = String(viewMonth + 1).padStart(2, "0");
+            const dd = String(day).padStart(2, "0");
+            const key = `${viewYear}-${mm}-${dd}`;
+            const isFuture = key > todayKey();
+            const isSelected = key === selectedKey;
+            const hasFeed = feedDateSet.has(key);
+            const isToday = key === todayKey();
+
+            return (
+              <div
+                key={di}
+                className={[
+                  styles.calCell,
+                  hasFeed ? styles.calCellFeed : "",
+                  isSelected ? styles.calCellSelected : "",
+                  isToday && !isSelected ? styles.calCellToday : "",
+                  isFuture ? styles.calCellFuture : "",
+                ].join(" ")}
+                onClick={() => !isFuture && handleDayClick(day)}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────────
+// 메인 페이지
+// ────────────────────────────────────────────────
 const StatPage = () => {
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
 
-  // 체중 변화 그래프 데이터
   const [stats, setStats] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // 체중 입력 폼
   const [inputDate, setInputDate] = useState(todayKey());
   const [inputWeight, setInputWeight] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
-  // 사진 슬라이드 뷰어 - 내가 작성한 기록(/writes/my)에서 사진이 있는 것만 모음
   const [photoEntries, setPhotoEntries] = useState([]);
   const [slideIndex, setSlideIndex] = useState(0);
   const [writesLoading, setWritesLoading] = useState(true);
 
-  // 원본 사진 모달 - 클릭한 이미지 URL을 담아두면 모달이 열림
   const [modalImage, setModalImage] = useState(null);
+
+  // 피드가 있는 날짜 목록 (달력 강조용)
+  const feedDates = useMemo(
+    () => [...new Set(photoEntries.map((e) => e.dateKey).filter(Boolean))],
+    [photoEntries],
+  );
 
   const fetchStats = () => {
     if (!token) return;
@@ -58,12 +186,8 @@ const StatPage = () => {
       .get(`${import.meta.env.VITE_BACKSERVER}/stats/my`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        setStats(res.data);
-      })
-      .catch(() => {
-        setStats([]);
-      })
+      .then((res) => setStats(res.data))
+      .catch(() => setStats([]))
       .finally(() => setStatsLoading(false));
   };
 
@@ -73,8 +197,6 @@ const StatPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, token]);
 
-  // 사진 슬라이드용 - 내 게시물 중 사진이 1장 이상 있는 것만, 날짜 오래된순으로 정렬
-  // imageUrls 전체를 보관해서, 한 게시물에 여러 장이 있으면 가로로 다 보여줄 수 있도록 함
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     setWritesLoading(true);
@@ -95,53 +217,39 @@ const StatPage = () => {
         setPhotoEntries(withPhotos);
         setSlideIndex(withPhotos.length > 0 ? withPhotos.length - 1 : 0);
       })
-      .catch(() => {
-        setPhotoEntries([]);
-      })
+      .catch(() => setPhotoEntries([]))
       .finally(() => setWritesLoading(false));
   }, [isLoggedIn, token]);
 
-  // 그래프에 넘길 데이터 - 날짜를 "M.D" 형식으로 짧게 표시
-  // 같은 날짜에 여러 건을 입력했다면 "마지막 값 기준"으로 한 점만 사용
   const chartData = useMemo(() => {
     const lastWeightByDate = new Map();
-    // stats가 입력된 순서(오래된 → 최근) 그대로라고 가정 - Map.set은 같은 키를 다시 쓰면
-    // 값을 덮어쓰므로, 같은 날짜를 여러 번 거치면 자연히 "마지막 입력값"이 남게 됨
-    stats.forEach((s) => {
-      lastWeightByDate.set(s.date, s.weight);
-    });
-
+    stats.forEach((s) => lastWeightByDate.set(s.date, s.weight));
     return Array.from(lastWeightByDate.entries())
-      .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+      .sort(([a], [b]) => new Date(a) - new Date(b))
       .map(([date, weight]) => {
         const [, m, d] = date.split("-");
-        return {
-          date: `${Number(m)}.${Number(d)}`,
-          weight,
-        };
+        return { date: `${Number(m)}.${Number(d)}`, weight };
       });
   }, [stats]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const weightNum = Number(inputWeight);
-
     if (!inputWeight || Number.isNaN(weightNum) || weightNum <= 0) {
       setSaveMsg("체중을 올바르게 입력해주세요.");
       return;
     }
-    // 비현실적인 값(예: 655555kg) 입력 방지 - 사람 체중으로 합리적인 범위만 허용
     if (weightNum < MIN_WEIGHT || weightNum > MAX_WEIGHT) {
-      setSaveMsg(`체중은 ${MIN_WEIGHT}kg ~ ${MAX_WEIGHT}kg 사이로 입력해주세요.`);
+      setSaveMsg(
+        `체중은 ${MIN_WEIGHT}kg ~ ${MAX_WEIGHT}kg 사이로 입력해주세요.`,
+      );
       return;
     }
-    // 소수점 셋째 자리 이상 입력 시 - 브라우저 기본 검증 팝업 대신 직접 안내 후 저장 중단
     const decimalPart = inputWeight.split(".")[1];
     if (decimalPart && decimalPart.length > 2) {
-      setSaveMsg("소수점 둘째 자리까지 입력 가능합니다. 올바른 값을 입력해주세요.");
+      setSaveMsg("소수점 둘째 자리까지 입력 가능합니다.");
       return;
     }
-
     setSaving(true);
     setSaveMsg("");
     axios
@@ -155,19 +263,15 @@ const StatPage = () => {
         setInputWeight("");
         fetchStats();
       })
-      .catch(() => {
-        setSaveMsg("저장에 실패했습니다. 다시 시도해주세요.");
-      })
+      .catch(() => setSaveMsg("저장에 실패했습니다. 다시 시도해주세요."))
       .finally(() => setSaving(false));
   };
 
   const goPrevSlide = () => setSlideIndex((i) => Math.max(0, i - 1));
   const goNextSlide = () =>
     setSlideIndex((i) => Math.min(photoEntries.length - 1, i + 1));
-
   const currentSlide = photoEntries[slideIndex];
 
-  // 비로그인 상태 - 통계 페이지는 내 기록 기반이므로 로그인 안내 화면만 표시 (다른 페이지로 강제 이동시키지 않음)
   if (!isLoggedIn) {
     return (
       <div className={styles.page}>
@@ -220,7 +324,10 @@ const StatPage = () => {
                     data={chartData}
                     margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                    />
                     <XAxis
                       dataKey="date"
                       tick={{ fontSize: 12 }}
@@ -253,17 +360,28 @@ const StatPage = () => {
           {/* 체중 입력 */}
           <section className={styles.card}>
             <div className={styles.cardTitle}>⚖️ 체중 입력</div>
-            <form className={styles.weightForm} onSubmit={handleSubmit} noValidate>
-              <div className={styles.formRow}>
-                <label htmlFor="stat-date">날짜</label>
-                <input
-                  id="stat-date"
-                  type="date"
-                  value={inputDate}
-                  max={todayKey()}
-                  onChange={(e) => setInputDate(e.target.value)}
-                />
+            <form
+              className={styles.weightForm}
+              onSubmit={handleSubmit}
+              noValidate
+            >
+              {/* 커스텀 달력 */}
+              <CustomCalendar
+                value={inputDate}
+                onChange={(key) => {
+                  setInputDate(key);
+                  // 해당 날짜의 첫 번째 피드로 슬라이드 이동하기
+                  const idx = photoEntries.findIndex((e) => e.dateKey === key);
+                  if (idx !== -1) setSlideIndex(idx);
+                }}
+                feedDates={feedDates}
+              />
+
+              {/* 선택된 날짜 표시 */}
+              <div className={styles.selectedDate}>
+                선택된 날짜: <strong>{inputDate}</strong>
               </div>
+
               <div className={styles.formRow}>
                 <label htmlFor="stat-weight">체중 (kg)</label>
                 <input
@@ -277,7 +395,6 @@ const StatPage = () => {
                   onChange={(e) => setInputWeight(e.target.value)}
                 />
               </div>
-              {/* 입력 가능 범위 안내 - 입력칸과 저장 버튼 사이에 배치 */}
               <div className={styles.weightHint}>
                 체중은 {MIN_WEIGHT}kg ~ {MAX_WEIGHT}kg 사이로, 소수점 둘째
                 자리까지 입력할 수 있어요.
@@ -289,15 +406,13 @@ const StatPage = () => {
               >
                 {saving ? "저장 중..." : "저장하기"}
               </button>
-             {saveMsg && (
-  <div
-    className={`${styles.saveMsg} ${
-      saveMsg.includes("저장되었습니다") ? "" : styles.saveMsgError
-    }`}
-  >
-    {saveMsg}
-  </div>
-)}
+              {saveMsg && (
+                <div
+                  className={`${styles.saveMsg} ${saveMsg.includes("저장되었습니다") ? "" : styles.saveMsgError}`}
+                >
+                  {saveMsg}
+                </div>
+              )}
             </form>
           </section>
 
@@ -321,14 +436,10 @@ const StatPage = () => {
                   ‹
                 </button>
                 <div className={styles.slideMain}>
-                  {/* 사진 1장이면 기존처럼 크게, 2장 이상이면 가로로 나열 (최대 4장) */}
                   <div
                     className={styles.slideImagesGrid}
                     style={{
-                      gridTemplateColumns: `repeat(${Math.min(
-                        currentSlide.images.length,
-                        4,
-                      )}, 1fr)`,
+                      gridTemplateColumns: `repeat(${Math.min(currentSlide.images.length, 4)}, 1fr)`,
                     }}
                   >
                     {currentSlide.images.slice(0, 4).map((url, idx) => (
@@ -367,7 +478,6 @@ const StatPage = () => {
         </div>
       </div>
 
-      {/* 원본 사진 모달 - 어떤 사진을 클릭하든 원본 크기로 보여줌 */}
       {modalImage && (
         <div
           className={styles.modalOverlay}
