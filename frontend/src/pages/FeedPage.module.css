@@ -207,17 +207,25 @@
   border-color: var(--primary);
 }
 
+.sortSelectWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .sortSelect {
   background: var(--bg-alt);
   border: 1.5px solid var(--border);
   border-radius: var(--r-full);
-  padding: 9px 14px;
+  padding: 9px 36px 9px 14px;
   font-size: 13px;
   font-weight: 500;
   color: var(--text-sub);
   cursor: pointer;
   font-family: inherit;
   transition: border-color var(--ease);
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .sortSelect:hover {
@@ -227,6 +235,14 @@
 .sortSelect:focus {
   outline: none;
   border-color: var(--primary);
+}
+
+.sortArrow {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  font-size: 11px;
+  color: var(--text-sub);
 }
 
 /* 게시물 그리드 */

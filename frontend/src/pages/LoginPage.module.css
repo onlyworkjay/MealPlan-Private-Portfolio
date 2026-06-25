@@ -171,6 +171,27 @@
   color: var(--primary-dark);
 }
 
+.test_account_box {
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: var(--bg-alt);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+  text-align: center;
+}
+
+.test_account_title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+}
+
+.test_account_info {
+  font-size: 13px;
+  color: var(--text);
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 28px 18px;

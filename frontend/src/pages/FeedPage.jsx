@@ -42,12 +42,26 @@ const FALLBACK_THUMB =
 const DAILY_WRITE_LIMIT = 3;
 
 const MONTH_LABELS = [
-  "1월", "2월", "3월", "4월", "5월", "6월",
-  "7월", "8월", "9월", "10월", "11월", "12월",
+  "1월",
+  "2월",
+  "3월",
+  "4월",
+  "5월",
+  "6월",
+  "7월",
+  "8월",
+  "9월",
+  "10월",
+  "11월",
+  "12월",
 ];
 
 // 제목(연/월) 클릭 시 연도 선택 → 월 선택 화면으로 빠르게 이동 가능. 미래 연/월/날짜는 비활성화
-function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = null }) {
+function MiniCalendar({
+  onDateSelect,
+  recordDates = new Set(),
+  selectedDate = null,
+}) {
   const today = new Date();
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
@@ -143,7 +157,11 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
               className={styles.miniCalNav}
               onClick={nextDecade}
               disabled={!canGoNextDecade}
-              style={!canGoNextDecade ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+              style={
+                !canGoNextDecade
+                  ? { opacity: 0.3, cursor: "not-allowed" }
+                  : undefined
+              }
             >
               ›
             </button>
@@ -159,7 +177,11 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
               className={styles.miniCalNav}
               onClick={nextYearNav}
               disabled={!canGoNextYear}
-              style={!canGoNextYear ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+              style={
+                !canGoNextYear
+                  ? { opacity: 0.3, cursor: "not-allowed" }
+                  : undefined
+              }
             >
               ›
             </button>
@@ -183,7 +205,11 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
                   .join(" ")}
                 style={
                   isFutureYear
-                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    ? {
+                        color: "#cbd5e1",
+                        cursor: "not-allowed",
+                        pointerEvents: "none",
+                      }
                     : undefined
                 }
                 onClick={() => selectYear(y)}
@@ -213,7 +239,11 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
                   .join(" ")}
                 style={
                   isFutureMonth
-                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    ? {
+                        color: "#cbd5e1",
+                        cursor: "not-allowed",
+                        pointerEvents: "none",
+                      }
                     : undefined
                 }
                 onClick={() => selectMonth(i)}
@@ -238,7 +268,8 @@ function MiniCalendar({ onDateSelect, recordDates = new Set(), selectedDate = nu
               : null;
 
             // 오늘보다 미래 날짜인지 체크
-            const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
+            const isFuture =
+              d !== null && new Date(year, month, d) > todayMidnight;
 
             // 실제 "오늘" 날짜인지
             const isToday =
@@ -405,7 +436,7 @@ const FeedPage = () => {
 
   // 초기화 버튼 - 날짜 필터를 완전히 해제하고, 캘린더는 오늘이 보이는 화면으로 리셋
   const handleResetCalendar = () => {
-   setSelectedDate(null);  
+    setSelectedDate(null);
     setCalendarKey((k) => k + 1);
   };
 
@@ -435,14 +466,17 @@ const FeedPage = () => {
                   </button>
                 )}
               </div>
-              <select
-                className={styles.sortSelect}
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-              >
-                <option value="latest">최신순</option>
-                <option value="oldest">오래된순</option>
-              </select>
+              <div className={styles.sortSelectWrap}>
+                <select
+                  className={styles.sortSelect}
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <option value="latest">최신순</option>
+                  <option value="oldest">오래된순</option>
+                </select>
+                <span className={styles.sortArrow}>∨</span>
+              </div>
               {selectedDate && (
                 <button
                   className={styles.filterDate}

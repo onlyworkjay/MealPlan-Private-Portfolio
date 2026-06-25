@@ -149,6 +149,11 @@ function LoginPage() {
             비밀번호 찾기
           </Link>
         </div>
+        <div className={styles.test_account_box}>
+          <p className={styles.test_account_title}>테스트 계정</p>
+          <p className={styles.test_account_info}>아이디: test00</p>
+          <p className={styles.test_account_info}>비밀번호: whdfh123!</p>
+        </div>
       </div>
     </div>
   );

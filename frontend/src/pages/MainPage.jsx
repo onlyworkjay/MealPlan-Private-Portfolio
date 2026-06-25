@@ -47,8 +47,18 @@ const FALLBACK_THUMB =
 const DAILY_WRITE_LIMIT = 3;
 
 const MONTH_LABELS = [
-  "1월", "2월", "3월", "4월", "5월", "6월",
-  "7월", "8월", "9월", "10월", "11월", "12월",
+  "1월",
+  "2월",
+  "3월",
+  "4월",
+  "5월",
+  "6월",
+  "7월",
+  "8월",
+  "9월",
+  "10월",
+  "11월",
+  "12월",
 ];
 
 // readOnly가 true면 관상용 캘린더 - 모든 날짜 클릭/이동 비활성화 (메인페이지 전용)
@@ -154,7 +164,11 @@ function MiniCalendar({
               className={styles.miniCalNav}
               onClick={nextDecade}
               disabled={!canGoNextDecade}
-              style={!canGoNextDecade ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+              style={
+                !canGoNextDecade
+                  ? { opacity: 0.3, cursor: "not-allowed" }
+                  : undefined
+              }
             >
               ›
             </button>
@@ -170,7 +184,11 @@ function MiniCalendar({
               className={styles.miniCalNav}
               onClick={nextYearNav}
               disabled={!canGoNextYear}
-              style={!canGoNextYear ? { opacity: 0.3, cursor: "not-allowed" } : undefined}
+              style={
+                !canGoNextYear
+                  ? { opacity: 0.3, cursor: "not-allowed" }
+                  : undefined
+              }
             >
               ›
             </button>
@@ -194,7 +212,11 @@ function MiniCalendar({
                   .join(" ")}
                 style={
                   isFutureYear
-                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    ? {
+                        color: "#cbd5e1",
+                        cursor: "not-allowed",
+                        pointerEvents: "none",
+                      }
                     : undefined
                 }
                 onClick={() => selectYear(y)}
@@ -224,7 +246,11 @@ function MiniCalendar({
                   .join(" ")}
                 style={
                   isFutureMonth
-                    ? { color: "#cbd5e1", cursor: "not-allowed", pointerEvents: "none" }
+                    ? {
+                        color: "#cbd5e1",
+                        cursor: "not-allowed",
+                        pointerEvents: "none",
+                      }
                     : undefined
                 }
                 onClick={() => selectMonth(i)}
@@ -249,7 +275,8 @@ function MiniCalendar({
               : null;
 
             // 오늘보다 미래 날짜인지 체크
-            const isFuture = d !== null && new Date(year, month, d) > todayMidnight;
+            const isFuture =
+              d !== null && new Date(year, month, d) > todayMidnight;
 
             // 실제 "오늘" 날짜인지
             const isToday =
@@ -293,7 +320,10 @@ function MiniCalendar({
                         : undefined
                 }
                 onClick={() =>
-                  dateKey && !isDisabled && onDateSelect && onDateSelect(dateKey)
+                  dateKey &&
+                  !isDisabled &&
+                  onDateSelect &&
+                  onDateSelect(dateKey)
                 }
               >
                 {d ?? ""}
@@ -404,9 +434,7 @@ const MainPage = () => {
   // 검색 필터 (제목, 내용) - 오늘의 피드 범위 안에서만 적용
   const filtered = todaysPosts.filter(
     (p) =>
-      !search ||
-      p.title.includes(search) ||
-      (p.content || "").includes(search),
+      !search || p.title.includes(search) || (p.content || "").includes(search),
   );
 
   // 정렬 (최신순 / 등록순)
@@ -547,14 +575,17 @@ const MainPage = () => {
                   </button>
                 )}
               </div>
-              <select
-                className={styles.sortSelect}
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-              >
-                <option value="latest">최신순</option>
-                <option value="oldest">등록순</option>
-              </select>
+              <div className={styles.sortSelectWrap}>
+                <select
+                  className={styles.sortSelect}
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <option value="latest">최신순</option>
+                  <option value="oldest">등록순</option>
+                </select>
+                <span className={styles.sortArrow}>∨</span>
+              </div>
               {isLoggedIn && (
                 <button
                   className="btn btn-primary btn-sm"

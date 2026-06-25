@@ -8,7 +8,12 @@ import { showSwal } from "../utils/SwalAlert";
 
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,8}$/;
 const PW_PATTERN = /^[a-zA-Z0-9!@#$%]{8,16}$/;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
 const POSTS_PER_PAGE = 10;
 
 const MENU = [
@@ -182,7 +187,10 @@ export default function MyPage({ user, onLogout, onNavigate }) {
   }, [postSearch, postSortOrder, myPosts.length]);
 
   // 페이지네이션 계산 (검색/정렬이 적용된 결과 기준)
-  const totalPages = Math.max(1, Math.ceil(sortedPosts.length / POSTS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedPosts.length / POSTS_PER_PAGE),
+  );
   const paginatedPosts = sortedPosts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
     currentPage * POSTS_PER_PAGE,
@@ -512,10 +520,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                   {m.label}
                 </a>
               ))}
-              <button
-                className={styles.mypage_logout}
-                onClick={handleLogout}
-              >
+              <button className={styles.mypage_logout} onClick={handleLogout}>
                 로그아웃
               </button>
             </nav>
@@ -547,14 +552,17 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                         </button>
                       )}
                     </div>
-                    <select
-                      className={styles.sortSelect}
-                      value={postSortOrder}
-                      onChange={(e) => setPostSortOrder(e.target.value)}
-                    >
-                      <option value="latest">최신순</option>
-                      <option value="oldest">오래된순</option>
-                    </select>
+                    <div className={styles.sortSelectWrap}>
+                      <select
+                        className={styles.sortSelect}
+                        value={postSortOrder}
+                        onChange={(e) => setPostSortOrder(e.target.value)}
+                      >
+                        <option value="latest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                      </select>
+                      <span className={styles.sortArrow}>∨</span>
+                    </div>
                   </div>
                 )}
 
@@ -629,9 +637,7 @@ export default function MyPage({ user, onLogout, onNavigate }) {
                             key={page}
                             className={[
                               styles.pageBtn,
-                              page === currentPage
-                                ? styles.pageBtnActive
-                                : "",
+                              page === currentPage ? styles.pageBtnActive : "",
                             ]
                               .filter(Boolean)
                               .join(" ")}
