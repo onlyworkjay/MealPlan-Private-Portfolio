@@ -1,6 +1,8 @@
 # Meal_Plan
 개인 포트폴리오인 Meal Plan 식단 사이트 제작
 
+http://mealplan-jay-portfolio.s3-website.ap-northeast-2.amazonaws.com/
+
 📄 포트폴리오 PPT: [Canva 링크](https://canva.link/pdyvn5z6xrw7x76)
 
 📁 GitHub: https://github.com/onlyworkjay/MealPlan-Private-Portfolio  
